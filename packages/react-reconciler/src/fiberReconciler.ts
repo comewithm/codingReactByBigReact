@@ -1,10 +1,13 @@
 import { Container } from "./hostConfig";
 import {FiberNode, FiberRootNode} from './fiber'
 import {HostRoot} from './workTags'
-
+import {scheduleUpdateOnFiber} from './workLoop'
 import {
-    initializeUpdateQueue
+    createUpdate,
+    initializeUpdateQueue,
+    enqueueUpdate
 } from './updateQueue'
+import { ReactElement } from "../../shared/ReactTypes";
 
 export function createContainer(container:Container) {
     const hostRootFiber = new FiberNode(HostRoot, {}, null)
@@ -13,6 +16,9 @@ export function createContainer(container:Container) {
     return root
 }
 
-export function updateContainer() {
-
+export function updateContainer(element:ReactElement, root:FiberRootNode) {
+    const hostRootFiber = root.current
+    const update = createUpdate(element)
+    enqueueUpdate(hostRootFiber, update)
+    scheduleUpdateOnFiber(hostRootFiber)
 }
