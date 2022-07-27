@@ -4,5 +4,5 @@ export type WorkTag =
     | typeof HostComponent
 
 export const FunctionComponent = 0
-export const HostRoot = 0
-export const HostComponent = 0
+export const HostRoot = 3
+export const HostComponent = 5

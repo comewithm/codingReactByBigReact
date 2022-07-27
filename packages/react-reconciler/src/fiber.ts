@@ -1,4 +1,4 @@
-import { Props, Key, Ref } from "../../shared/ReactTypes";
+import { Props, Key, Ref, ReactElement } from "../../shared/ReactTypes";
 import {Flags, NoFlags} from './fiberTags'
 import {Container} from './hostConfig'
 import {UpdateQueue} from './updateQueue'
@@ -34,8 +34,16 @@ export class FiberNode {
     sibling: FiberNode | null;
     child: FiberNode | null;
     index: number;
-
+    /**
+     * updateQueue：
+     * 存储state更新的队列, 当前节点的state改动之后, 
+     * 都会创建一个update对象添加到这个队列中.
+     */
     updateQueue: UpdateQueue | null;
+    /**
+     * memoizeState
+     *用于输出的state, 最终渲染所使用的state
+     */
     memoizedState: any;
     /**
      * alternate:
@@ -117,4 +125,18 @@ export const createWorkInProgress = (
 
     return wip
 
+}
+
+export function createFiberFromElement(element:ReactElement):FiberNode{
+    const {type, key, props} = element
+    let fiberTag:WorkTag = FunctionComponent
+
+    if(typeof type === 'string'){
+        fiberTag = HostComponent
+    }
+
+    const fiber = new FiberNode(fiberTag, props, key)
+    fiber.type = type
+
+    return fiber
 }

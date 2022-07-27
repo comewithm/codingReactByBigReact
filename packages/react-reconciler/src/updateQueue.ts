@@ -45,6 +45,16 @@ export const processUpdateQueue = (fiber:FiberNode) => {
         const pendingUpdate = pending
         updateQueue.shared.pending = null
 
-        
+        if(pendingUpdate !== null) {
+            const action = pendingUpdate.action
+            if(typeof action === 'function') {
+                newState = action()
+            } else {
+                newState = action
+            }
+        }        
+    } else {
+        console.error('processUpdateQueue时 updateQueue不存在')
     }
+    fiber.memoizedState = newState
 }

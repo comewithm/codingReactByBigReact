@@ -1,7 +1,7 @@
 import { ReactElement } from "../../shared/ReactTypes";
 import { FiberNode } from "./fiber";
 import { HostComponent, HostRoot } from "./workTags";
-
+import {mountChildFibers, reconcileChildFibers} from './childFiber'
 import {processUpdateQueue} from './updateQueue'
 
 export const beginWork = (workInProgress: FiberNode) => {
