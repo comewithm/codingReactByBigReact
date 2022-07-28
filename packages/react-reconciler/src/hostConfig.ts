@@ -1,1 +1,1 @@
-export * from 'react-dom/src/hostConfig'
+export * from '../../react-dom/src/hostConfig'

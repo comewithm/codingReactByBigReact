@@ -26,13 +26,41 @@ export class FiberNode {
     stateNode: any; 
     type:any;
     ref: Ref;
+    /**
+     * tag:
+     * fiber类型
+     */
     tag:WorkTag;
+    /**
+     * flags:
+     * 标志位, 副作用标记
+     */
     flags: Flags;
+    /**
+     * subtreeFlags:
+     * 替代 16.x 版本中的 firstEffect, nextEffect. 
+     * 默认未开启, 当设置了enableNewReconciler=true 才会启用
+     */
     subtreeFlags: Flags;
-
+    /**
+     * return:
+     * 指向父节点
+     */
     return: FiberNode | null;
+    /**
+     * sibling:
+     * 指向下一个兄弟节点
+     */
     sibling: FiberNode | null;
+    /**
+     * child:
+     * 指向第一个子节点.
+     */
     child: FiberNode | null;
+    /**
+     * index:
+     * fiber 在兄弟节点中的索引, 如果是单节点默认为 0
+     */
     index: number;
     /**
      * updateQueue：
@@ -42,7 +70,7 @@ export class FiberNode {
     updateQueue: UpdateQueue | null;
     /**
      * memoizeState
-     *用于输出的state, 最终渲染所使用的state
+     * 用于输出的state, 最终渲染所使用的state
      */
     memoizedState: any;
     /**
@@ -88,6 +116,10 @@ export class FiberNode {
 
 export class FiberRootNode {
     container:Container
+    /**
+     * current:
+     * 当前fiber
+     */
     current: FiberNode
     constructor(container:Container, hostRootFiber:FiberNode){
         this.container = container
