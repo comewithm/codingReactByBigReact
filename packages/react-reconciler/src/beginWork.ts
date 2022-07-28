@@ -1,6 +1,6 @@
 import { ReactElement } from "../../shared/ReactTypes";
 import { FiberNode } from "./fiber";
-import { HostComponent, HostRoot, HostText } from "./workTags";
+import { FunctionComponent, HostComponent, HostRoot, HostText } from "./workTags";
 import {mountChildFibers, reconcileChildFibers} from './childFiber'
 import {processUpdateQueue} from './updateQueue'
 
@@ -12,6 +12,8 @@ export const beginWork = (workInProgress: FiberNode) => {
             return updateHostComponent(workInProgress)
         case HostText:
             return null
+        case FunctionComponent:
+            return updateFunctionComponent(workInProgress)
         default:
             console.error("beginWork 未处理...")
             return null
@@ -32,6 +34,13 @@ function updateHostComponent(workInProgress: FiberNode) {
     const nextChildren = nextProps.children
     reconcileChildren(workInProgress, nextChildren)
 
+    return workInProgress.child
+}
+
+function updateFunctionComponent(workInProgress: FiberNode){
+    const nextChildren = renderWithHooks(workInProgress)
+    reconcileChildren(workInProgress, nextChildren)
+    
     return workInProgress.child
 }
 
