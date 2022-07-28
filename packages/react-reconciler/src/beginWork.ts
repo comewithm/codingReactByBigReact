@@ -1,6 +1,6 @@
 import { ReactElement } from "../../shared/ReactTypes";
 import { FiberNode } from "./fiber";
-import { HostComponent, HostRoot } from "./workTags";
+import { HostComponent, HostRoot, HostText } from "./workTags";
 import {mountChildFibers, reconcileChildFibers} from './childFiber'
 import {processUpdateQueue} from './updateQueue'
 
@@ -10,6 +10,8 @@ export const beginWork = (workInProgress: FiberNode) => {
             return updateHostRoot(workInProgress)
         case HostComponent:
             return updateHostComponent(workInProgress)
+        case HostText:
+            return null
         default:
             console.error("beginWork 未处理...")
             return null

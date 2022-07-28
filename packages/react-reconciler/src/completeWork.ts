@@ -1,6 +1,6 @@
 import { FiberNode } from "./fiber";
-import { HostComponent, HostRoot } from "./workTags";
-import {appendInitialChild, createInstance, Instance} from './hostConfig'
+import { HostComponent, HostRoot, HostText } from "./workTags";
+import {appendInitialChild, createInstance, Instance, createTextInstance} from './hostConfig'
 import { NoFlags } from "./fiberTags";
 
 const appendAllChildren = (parent: Instance, workInProgress: FiberNode) => {
@@ -44,6 +44,8 @@ const bubbleProperties = (completeWork: FiberNode) => {
 }
 
 export const completeWork = (workInProgress: FiberNode) => {
+    const newProps = workInProgress.pendingProps
+
     switch(workInProgress.tag) {
         case HostComponent:
             // 初始化DOM
@@ -58,6 +60,13 @@ export const completeWork = (workInProgress: FiberNode) => {
             bubbleProperties(workInProgress)
             return null
         case HostRoot:
+            bubbleProperties(workInProgress)
+            return null
+        case HostText:
+            // 初始化DOM
+            const textInstance = createTextInstance(newProps.content)
+            workInProgress.stateNode = textInstance
+            // 冒泡flag
             bubbleProperties(workInProgress)
             return null
         default:

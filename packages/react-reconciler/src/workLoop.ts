@@ -6,6 +6,8 @@ import {
 import { HostRoot } from "./workTags";
 import {beginWork} from './beginWork'
 import {completeWork} from './completeWork'
+import { NoFlags, MutationMask } from "./fiberTags";
+import {commitMutationEffects} from './commitWork'
 
 let workInProgress: FiberNode | null = null;
 
@@ -53,7 +55,16 @@ function performSyncWorkOnRoot(root: FiberRootNode) {
             workInProgress = null
         }
     } while(true);
-    console.log('render 结束', root)
+
+    if(workInProgress !== null) {
+        console.error('render阶段结束 wip不为null')
+    }
+
+    const finishedWork = root.current.alternate
+    root.finishedWork = finishedWork
+
+    // commit阶段操作
+    commitRoot(root)
 }
 
 function prepareFreshStack(root: FiberRootNode) {
@@ -97,4 +108,36 @@ function completeUnitOfWork(fiber: FiberNode) {
         workInProgress = node
 
     } while(node !== null)
+}
+
+
+function commitRoot(root:FiberRootNode) {
+    const finishedWork = root.finishedWork
+
+    if(finishedWork === null) {
+        return
+    }
+    // 重置
+    root.finishedWork = null
+
+    const subtreeHasEffect = (finishedWork.subtreeFlags & MutationMask) !== NoFlags
+
+    const rootHasEffect = (finishedWork.flags & MutationMask) !== NoFlags
+
+    if(subtreeHasEffect || rootHasEffect) {
+        // 有副作用要执行
+
+        // 阶段1/3: beforeMutation
+
+        // 阶段2/3: Mutation
+        commitMutationEffects(finishedWork)
+
+        // Fiber Tree切换
+        root.current = finishedWork
+
+        // 阶段3/3: Layout
+    } else {
+        // Fiber Tree切换
+        root.current = finishedWork
+    }
 }

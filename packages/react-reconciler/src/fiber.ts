@@ -121,10 +121,12 @@ export class FiberRootNode {
      * 当前fiber
      */
     current: FiberNode
+    finishedWork: FiberNode | null
     constructor(container:Container, hostRootFiber:FiberNode){
         this.container = container
         this.current = hostRootFiber
         hostRootFiber.stateNode = this
+        this.finishedWork = null
     }
 }
 

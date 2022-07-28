@@ -2,6 +2,7 @@ import { REACT_ELEMENT_TYPE } from "../../shared/ReactSymbols";
 import { ReactElement } from "../../shared/ReactTypes"
 import { FiberNode, createFiberFromElement } from "./fiber"
 import { Placement } from "./fiberTags";
+import { HostText } from "./workTags";
 
 
 function ChildReconciler(shouldTrackEffect: boolean) {
@@ -26,6 +27,17 @@ function ChildReconciler(shouldTrackEffect: boolean) {
         return fiber
     }
 
+    function reconcileSingleTextNode(
+        returnFiber: FiberNode,
+        currentFirstChild: FiberNode | null,
+        content:string
+    ) {
+        currentFirstChild;
+        const created = new FiberNode(HostText, {content}, null)
+        created.return = returnFiber
+        return created
+    }
+
     function reconcileChildFibers(
         returnFiber: FiberNode,
         currentFirstChild: FiberNode | null,
@@ -44,6 +56,15 @@ function ChildReconciler(shouldTrackEffect: boolean) {
                         )
                     )
             }
+        }
+        if(typeof newChild === 'string') {
+            return placeSingleChild(
+                reconcileSingleTextNode(
+                    returnFiber,
+                    currentFirstChild,
+                    newChild
+                )
+            )
         }
         console.error('reconcile 未实现的child类型')
         return null
