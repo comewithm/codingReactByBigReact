@@ -5,7 +5,7 @@ import {scheduleUpdateOnFiber} from './workLoop'
 import {
     createUpdate,
     initializeUpdateQueue,
-    createUpdateQueue
+    createUpdateQueue,
     enqueueUpdate,
     UpdateQueue
 } from './updateQueue'
@@ -21,10 +21,10 @@ export function createContainer(container:Container) {
 
 export function updateContainer(element:ReactElement, root:FiberRootNode) {
     const hostRootFiber = root.current
-    const update = createUpdate<ReactElement>(element)
+    const update = createUpdate<ReactElement>(element);
     enqueueUpdate(
         hostRootFiber.updateQueue as UpdateQueue<ReactElement>, 
         update
-    )
+    );
     scheduleUpdateOnFiber(hostRootFiber)
 }

@@ -1,5 +1,5 @@
 import { FiberNode } from "./fiber";
-import { HostComponent, HostRoot, HostText } from "./workTags";
+import { FunctionComponent, HostComponent, HostRoot, HostText } from "./workTags";
 import {appendInitialChild, createInstance, Instance, createTextInstance} from './hostConfig'
 import { NoFlags } from "./fiberTags";
 
@@ -67,6 +67,9 @@ export const completeWork = (workInProgress: FiberNode) => {
             const textInstance = createTextInstance(newProps.content)
             workInProgress.stateNode = textInstance
             // 冒泡flag
+            bubbleProperties(workInProgress)
+            return null
+        case FunctionComponent:
             bubbleProperties(workInProgress)
             return null
         default:

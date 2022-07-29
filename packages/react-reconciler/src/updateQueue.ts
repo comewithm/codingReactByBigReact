@@ -65,7 +65,7 @@ export const processUpdateQueue = <State>(fiber:FiberNode) => {
             }
         }        
     } else {
-        console.error('processUpdateQueue时 updateQueue不存在')
+        console.error(fiber, 'processUpdateQueue时 updateQueue不存在')
     }
     fiber.memoizedState = newState
 }

@@ -11,6 +11,13 @@ export class FiberNode {
      * 用于和fiber.memoizedProps比较可以得出属性是否变动.
      */
     pendingProps:Props;
+    /**
+     * memoizedProps:
+     * 上一次生成子节点时用到的属性, 生成子节点之后保持在内存中. 
+     * 向下生成子节点之前叫做pendingProps, 生成子节点之后会把
+     * pendingProps赋值给memoizedProps用于下一次比较.
+     * pendingProps和memoizedProps比较可以得出属性是否变动.
+     */
     memoizedProps: Props | null;
     /**
      * ReactElement 中的key
@@ -24,6 +31,10 @@ export class FiberNode {
      * class 类型节点其stateNode指向的是 class 实例).
      */
     stateNode: any; 
+    /**
+     * type:
+     * 一般来讲和ReactElement组件的 type 一致
+     */
     type:any;
     ref: Ref;
     /**
@@ -34,6 +45,9 @@ export class FiberNode {
     /**
      * flags:
      * 标志位, 副作用标记
+     * 在ReactFiberFlags.js中定义了所有的标志位. 
+     * reconciler阶段会将所有拥有flags标记的节点添加到副作用链表中, 
+     * 等待 commit 阶段的处理.
      */
     flags: Flags;
     /**
@@ -67,7 +81,7 @@ export class FiberNode {
      * 存储state更新的队列, 当前节点的state改动之后, 
      * 都会创建一个update对象添加到这个队列中.
      */
-    updateQueue: UpdateQueue | null;
+    updateQueue: unknown;
     /**
      * memoizeState
      * 用于输出的state, 最终渲染所使用的state
