@@ -1,6 +1,6 @@
 import typescript from 'rollup-plugin-typescript2'
 import path from 'path'
-import resolve from '@rollup/plugin-node-resolve'
+import resolve from '@rollup/plugin-babel'
 import generatePackageJson from 'rollup-plugin-generate-package-json'
 
 const tsConfig = {
@@ -49,6 +49,18 @@ export default [
         ]   
     },
     {
+        input: `${resolvePkgPath('react-dom', false)}/test-utils.ts`,
+        external: ['react', 'react-dom'],
+        output: [
+            {
+                file: `${resolvePkgPath('react-dom', true)}/test-utils.js`,
+                name:'test-utils.js',
+                format: 'umd'
+            }
+        ],
+        plugins: [typescript(tsConfig), resolve()]
+    },
+    {
         input: `${resolvePkgPath('react', false)}/index.ts`,
         output: [
             {
@@ -74,11 +86,18 @@ export default [
     },
     {
         input: `${resolvePkgPath('react', false)}/src/jsx.ts`,
-        output: {
-            file: `${resolvePkgPath('react', true)}/jsx-dev-runtime.js`,
-            name: 'jsx-dev-runtime.js',
-            format: 'umd'
-        },
+        output: [
+            {
+                file: `${resolvePkgPath('react', true)}/jsx-dev-runtime.js`,
+                name: 'jsx-dev-runtime.js',
+                format: 'umd'
+            },
+            {
+                file: `${resolvePkgPath('react', true)}/jsx-runtime.js`,
+                name: 'jsx-dev-runtime.js',
+                format: 'umd'
+            }
+        ],
         plugins: [typescript(tsConfig), resolve()]
     }
 ]

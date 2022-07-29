@@ -27,4 +27,6 @@ export function updateContainer(element:ReactElement, root:FiberRootNode) {
         update
     );
     scheduleUpdateOnFiber(hostRootFiber)
+    
+    return element
 }
