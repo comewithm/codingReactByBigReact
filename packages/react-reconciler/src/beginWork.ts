@@ -1,4 +1,4 @@
-import { ReactElement } from "../../shared/ReactTypes";
+import { ReactElement } from "shared/ReactTypes";
 import { FiberNode } from "./fiber";
 import { FunctionComponent, HostComponent, HostRoot, HostText } from "./workTags";
 import {mountChildFibers, reconcileChildFibers} from './childFiber'

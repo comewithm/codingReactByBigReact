@@ -1,5 +1,5 @@
 import { FiberNode } from "./fiber"
-import {Action} from '../../shared/ReactTypes'
+import {Action} from 'shared/ReactTypes'
 
 
 export interface Update<State> {

@@ -9,7 +9,7 @@ import {
     enqueueUpdate,
     UpdateQueue
 } from './updateQueue'
-import { ReactElement } from "../../shared/ReactTypes";
+import { ReactElement } from "shared/ReactTypes";
 
 export function createContainer(container:Container) {
     const hostRootFiber = new FiberNode(HostRoot, {}, null)

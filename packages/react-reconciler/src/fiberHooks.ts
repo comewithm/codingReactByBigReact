@@ -1,9 +1,9 @@
 import { FiberNode } from "./fiber";
-import {Dispatcher, Dispatch} from '../../react/src/currentDispatcher'
+import {Dispatcher, Dispatch} from 'react/src/currentDispatcher'
 
-import sharedInternals from '../../shared/internals'
+import sharedInternals from 'shared/internals'
 import { createUpdateQueue, UpdateQueue, createUpdate, enqueueUpdate } from "./updateQueue";
-import { Action } from "../../shared/ReactTypes";
+import { Action } from "shared/ReactTypes";
 import { scheduleUpdateOnFiber } from "./workLoop";
 
 interface Hook {

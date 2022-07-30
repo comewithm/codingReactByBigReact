@@ -1,4 +1,4 @@
-import { Props, Key, Ref, ReactElement } from "../../shared/ReactTypes";
+import { Props, Key, Ref, ReactElement } from "shared/ReactTypes";
 import {Flags, NoFlags} from './fiberTags'
 import {Container} from './hostConfig'
 import {UpdateQueue} from './updateQueue'
