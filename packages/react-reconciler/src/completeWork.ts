@@ -1,7 +1,7 @@
 import { FiberNode } from "./fiber";
 import { FunctionComponent, HostComponent, HostRoot, HostText } from "./workTags";
 import {appendInitialChild, createInstance, Instance, createTextInstance} from './hostConfig'
-import { NoFlags } from "./fiberTags";
+import { NoFlags, Update } from "./fiberTags";
 
 const appendAllChildren = (parent: Instance, workInProgress: FiberNode) => {
     // 遍历workInProgress所有子孙 DOM元素, 依次挂载
@@ -43,18 +43,31 @@ const bubbleProperties = (completeWork: FiberNode) => {
     completeWork.subtreeFlags |= subtreeFlags
 }
 
+function markUpdate(fiber: FiberNode) {
+    fiber.flags |= Update
+}
+
 export const completeWork = (workInProgress: FiberNode) => {
+
     const newProps = workInProgress.pendingProps
+
+    const current = workInProgress.alternate
 
     switch(workInProgress.tag) {
         case HostComponent:
-            // 初始化DOM
-            const instance = createInstance(workInProgress.type)
-            // 挂载DOM
-            appendAllChildren(instance, workInProgress)
-            workInProgress.stateNode = instance
+            if(current !== null && workInProgress.stateNode) {
+                // 更新
+                // TODO 更新元素属性
+            } else {
 
-            // 初始化元素属性 TODO
+                // 初始化DOM
+                const instance = createInstance(workInProgress.type)
+                // 挂载DOM
+                appendAllChildren(instance, workInProgress)
+                workInProgress.stateNode = instance
+    
+                // 初始化元素属性 TODO
+            }
 
             // 冒泡flag
             bubbleProperties(workInProgress)
@@ -63,9 +76,18 @@ export const completeWork = (workInProgress: FiberNode) => {
             bubbleProperties(workInProgress)
             return null
         case HostText:
-            // 初始化DOM
-            const textInstance = createTextInstance(newProps.content)
-            workInProgress.stateNode = textInstance
+            if(current !== null && workInProgress.stateNode) {
+                // 更新
+                const oldText = current.memoizedProps?.content
+                const newText = newProps.content
+                if(oldText !== newText) {
+                    markUpdate(workInProgress)
+                }
+            } else {
+                // 初始化DOM
+                const textInstance = createTextInstance(newProps.content)
+                workInProgress.stateNode = textInstance
+            }
             // 冒泡flag
             bubbleProperties(workInProgress)
             return null

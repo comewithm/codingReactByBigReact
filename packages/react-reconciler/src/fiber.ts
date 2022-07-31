@@ -1,7 +1,6 @@
 import { Props, Key, Ref, ReactElement } from "shared/ReactTypes";
 import {Flags, NoFlags} from './fiberTags'
 import {Container} from './hostConfig'
-import {UpdateQueue} from './updateQueue'
 import {WorkTag, HostComponent, FunctionComponent} from './workTags'
 
 export class FiberNode {
@@ -56,6 +55,7 @@ export class FiberNode {
      * 默认未开启, 当设置了enableNewReconciler=true 才会启用
      */
     subtreeFlags: Flags;
+    deletions: FiberNode[] | null;
     /**
      * return:
      * 指向父节点
@@ -123,6 +123,7 @@ export class FiberNode {
         // 副作用
         this.flags = NoFlags
         this.subtreeFlags = NoFlags
+        this.deletions = null
 
         this.alternate = null
     }
@@ -161,6 +162,10 @@ export const createWorkInProgress = (
     } else {
         // update
         wip.pendingProps = pendingProps
+        wip.flags = NoFlags
+        wip.subtreeFlags = NoFlags
+        wip.deletions = null
+        wip.type = current.type
     }
 
     wip.updateQueue = current.updateQueue

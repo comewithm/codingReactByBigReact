@@ -4,7 +4,6 @@ import {HostRoot} from './workTags'
 import {scheduleUpdateOnFiber} from './workLoop'
 import {
     createUpdate,
-    initializeUpdateQueue,
     createUpdateQueue,
     enqueueUpdate,
     UpdateQueue

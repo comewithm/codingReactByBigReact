@@ -2,7 +2,7 @@ import { ReactElement } from "shared/ReactTypes";
 import { FiberNode } from "./fiber";
 import { FunctionComponent, HostComponent, HostRoot, HostText } from "./workTags";
 import {mountChildFibers, reconcileChildFibers} from './childFiber'
-import {processUpdateQueue} from './updateQueue'
+import {processUpdateQueue, UpdateQueue} from './updateQueue'
 import { renderWithHooks } from "./fiberHooks";
 
 export const beginWork = (workInProgress: FiberNode) => {
@@ -22,7 +22,14 @@ export const beginWork = (workInProgress: FiberNode) => {
 }
 
 function updateHostRoot(workInProgress: FiberNode) {
-    processUpdateQueue(workInProgress)
+    const baseState = workInProgress.memoizedState
+    const updateQueue = workInProgress.updateQueue as UpdateQueue<Element>
+
+    workInProgress.memoizedState = processUpdateQueue(
+        baseState,
+        updateQueue,
+        workInProgress
+    )
     const nextChildren = workInProgress.memoizedState
     reconcileChildren(workInProgress, nextChildren)
 
