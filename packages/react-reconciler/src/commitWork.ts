@@ -87,6 +87,9 @@ const commitMutationEffectsOnFiber = (finishedWork: FiberNode) => {
 }
 
 const commitPlacement = (finishedWork: FiberNode) => {
+    if(__DEV__) {
+        console.log(`插入、移动DOM:${finishedWork}`);
+    }
     const hostParent = getHostParent(finishedWork) as Container
 
     // appendChild/insertBefore
@@ -137,6 +140,9 @@ function appendPlacementNodeIntoContainer(fiber: FiberNode, parent: Container) {
  *
  */
 function commitDeletion(childToDelete: FiberNode) {
+    if(__DEV__) {
+        console.log(`删除DOM、组件unmount:${childToDelete}`);
+    }
     let firstHostFiber: FiberNode
 
     commitNestedUnmount(childToDelete, (unmountFiber) => {
@@ -168,6 +174,9 @@ function commitDeletion(childToDelete: FiberNode) {
 }
 
 function commitUpdate(finishedWork: FiberNode) {
+    if(__DEV__) {
+        console.log(`更新DOM、文本节点内容:${finishedWork}`);
+    }
     switch(finishedWork.tag) {
         case HostText:
             const newContent = finishedWork.pendingProps.content

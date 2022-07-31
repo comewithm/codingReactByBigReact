@@ -1,6 +1,7 @@
 import typescript from 'rollup-plugin-typescript2'
 import path from 'path'
 import resolve from '@rollup/plugin-babel'
+import replace from '@rollup/plugin-replace'
 import generatePackageJson from 'rollup-plugin-generate-package-json'
 
 const tsConfig = {
@@ -16,7 +17,16 @@ function resolvePkgPath(pkgName, isDist) {
     return `${pkgPath}/${pkgName}`
 }   
 
+const basePlugins = [
+    typescript(tsConfig),
+    resolve(),
+    replace({
+        __DEV__: process.env.NODE_ENV !== 'production'
+    })
+]
+
 export default [
+    // react-dom
     {
         input: `${resolvePkgPath('react-dom', false)}/index.ts`,
         external: ['react'],
@@ -35,6 +45,7 @@ export default [
         plugins:[
             typescript(tsConfig),
             resolve(),
+            ...basePlugins,
             generatePackageJson({
                 inputFolder: resolvePkgPath('react-dom', false),
                 outputFolder: resolvePkgPath('react-dom', true),
@@ -48,6 +59,7 @@ export default [
             })
         ]   
     },
+    // react-test-utils
     {
         input: `${resolvePkgPath('react-dom', false)}/test-utils.ts`,
         external: ['react', 'react-dom'],
@@ -58,8 +70,9 @@ export default [
                 format: 'umd'
             }
         ],
-        plugins: [typescript(tsConfig), resolve()]
+        plugins: basePlugins
     },
+    // react
     {
         input: `${resolvePkgPath('react', false)}/index.ts`,
         output: [
@@ -72,6 +85,7 @@ export default [
         plugins:[
             typescript(tsConfig),
             resolve(),
+            ...basePlugins,
             generatePackageJson({
                 inputFolder: resolvePkgPath('react', false),
                 outputFolder: resolvePkgPath('react', true),
@@ -84,6 +98,7 @@ export default [
             })
         ]   
     },
+    // jsx-runtime
     {
         input: `${resolvePkgPath('react', false)}/src/jsx.ts`,
         output: [
@@ -98,6 +113,6 @@ export default [
                 format: 'umd'
             }
         ],
-        plugins: [typescript(tsConfig), resolve()]
+        plugins: basePlugins
     }
 ]

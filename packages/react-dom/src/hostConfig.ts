@@ -1,11 +1,14 @@
-export type Container = Element | Document
+import { PackagedElement, updateEventProps } from "./SyntheticEvent"
 
-export type Instance = Element
+export type Container = PackagedElement | Document
+
+export type Instance = PackagedElement
 
 export type TextInstance = Text
 
-export const createInstance = (type: string) => {
-    return document.createElement(type)
+export const createInstance = (type: string, props: any) => {
+    const element = document.createElement(type)
+    return updateEventProps(element, props)
 }
 
 export const appendInitialChild = (parent: Instance, child: Instance) => {
