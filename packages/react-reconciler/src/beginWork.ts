@@ -6,7 +6,7 @@ import {processUpdateQueue, UpdateQueue} from './updateQueue'
 import { renderWithHooks } from "./fiberHooks";
 
 export const beginWork = (workInProgress: FiberNode) => {
-    if(__DEV__) {
+    if(__LOG__) {
         console.log(`beginWork流程:${workInProgress.type}`)
     }
     switch(workInProgress.tag) {

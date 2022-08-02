@@ -36,7 +36,7 @@ export const createUpdateQueue = <Action>() => {
 
 // 创建
 export const createUpdate = <State>(action: Action<State>) => {
-    if(__DEV__) {
+    if(__LOG__) {
         console.log(`创建update:${action}`);
     }
     return {
@@ -49,7 +49,7 @@ export const enqueueUpdate = <Action>(
     updateQueue:UpdateQueue<Action>, 
     update: Update<Action>
 ) => {
-    if(__DEV__) {
+    if(__LOG__) {
         console.log(`将update插入更新队列:${update}`);
     }
     updateQueue.shared.pending = update

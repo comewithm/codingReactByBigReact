@@ -1,4 +1,4 @@
-import { PackagedElement, updateEventProps } from "./SyntheticEvent"
+import { PackagedElement, updateFiberProps } from "./SyntheticEvent"
 
 export type Container = PackagedElement | Document
 
@@ -6,9 +6,9 @@ export type Instance = PackagedElement
 
 export type TextInstance = Text
 
-export const createInstance = (type: string, props: any) => {
+export const createInstance = (type: string, props: any):Instance => {
     const element = document.createElement(type)
-    return updateEventProps(element, props)
+    return updateFiberProps(element, props)
 }
 
 export const appendInitialChild = (parent: Instance, child: Instance) => {

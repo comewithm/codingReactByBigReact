@@ -9,13 +9,15 @@ import { HostText } from "./workTags";
  * 更新(文本节点内容更新、属性更新)在completeWork中，对应 Update flag
  */
 
-function ChildReconciler(shouldTrackEffect: boolean) {
+type ExistingChildren = Map<string | number, FiberNode>
+
+function ChildReconciler(shouldTrackEffects: boolean) {
 
     function deleteChild(
         returnFiber: FiberNode,
         childToDelete: FiberNode
     ) {
-        if(!shouldTrackEffect) {
+        if(!shouldTrackEffects) {
             return
         }
         const deletions = returnFiber.deletions
@@ -24,6 +26,19 @@ function ChildReconciler(shouldTrackEffect: boolean) {
             returnFiber.flags |= ChildDeletion
         } else {
             deletions.push(childToDelete)
+        }
+    }
+
+    function deleteRemainingChildren(
+        returnFiber: FiberNode,
+        currentFirstChild: FiberNode | null
+    ){
+        if(!shouldTrackEffects) {
+            return
+        }
+        let childToDelete = currentFirstChild
+        while(childToDelete !== null) {
+            //TODO
         }
     }
 
@@ -36,24 +51,30 @@ function ChildReconciler(shouldTrackEffect: boolean) {
         // 前：a 后：b 删除a,创建b
         // 前：无 后：a 创建a
         const key = element.key
-        if(currentFirstChild !== null) {
-            if(currentFirstChild.key === key) {
+        let current = currentFirstChild
+        while(current !== null) {
+            if(current.key === key) {
                 // key相同 比较type
                 if(element.$$typeof === REACT_ELEMENT_TYPE) {
-                    if(currentFirstChild.type === element.type) {
+                    if(current.type === element.type) {
                         // type相同 可以复用
-                        const existing = useFiber(currentFirstChild, element.props)
+                        const existing = useFiber(current, element.props)
                         existing.return = returnFiber
+                        // 当前节点可复用,其他兄弟节点都删除
+                        deleteRemainingChildren(returnFiber, current.sibling)
                         return existing
                     } 
-                    // type不同 删除旧的
-                    deleteChild(returnFiber, currentFirstChild)
+                    // key相同但type不同,无法复用.后面的兄弟节点也没有复用的可能性，都删除
+                    deleteRemainingChildren(returnFiber, current)
+                    break
                 } else {
                     console.log('未定义的element.$$typeof', element.$$typeof)
+                    break
                 }
             } else {
-                // key不同 删除旧的
-                deleteChild(returnFiber, currentFirstChild)
+                // key不同 删除旧的, 继续比较
+                deleteChild(returnFiber, current)
+                current = current.sibling
             }
         }
         // 创建新的
@@ -63,7 +84,7 @@ function ChildReconciler(shouldTrackEffect: boolean) {
     }
 
     function placeSingleChild(fiber:FiberNode){
-        if(shouldTrackEffect && fiber.alternate === null){
+        if(shouldTrackEffects && fiber.alternate === null){
             fiber.flags |= Placement
         }
         return fiber
