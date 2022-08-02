@@ -1,7 +1,18 @@
 import { FiberNode } from "./fiber";
-import { FunctionComponent, HostComponent, HostRoot, HostText } from "./workTags";
-import {appendInitialChild, createInstance, Instance, createTextInstance} from './hostConfig'
+import { 
+    FunctionComponent, 
+    HostComponent, 
+    HostRoot, 
+    HostText 
+} from "./workTags";
+import {
+    appendInitialChild, 
+    createInstance, 
+    Instance, 
+    createTextInstance
+} from './hostConfig'
 import { NoFlags, Update } from "./fiberTags";
+import {updateFiberProps} from 'react-dom/src/SyntheticEvent'
 
 const appendAllChildren = (parent: Instance, workInProgress: FiberNode) => {
     // 遍历workInProgress所有子孙 DOM元素, 依次挂载
@@ -52,7 +63,6 @@ export const completeWork = (workInProgress: FiberNode) => {
         console.log(`complete流程:${workInProgress.type}`);
     }
     const newProps = workInProgress.pendingProps
-
     const current = workInProgress.alternate
 
     switch(workInProgress.tag) {
@@ -60,8 +70,14 @@ export const completeWork = (workInProgress: FiberNode) => {
             if(current !== null && workInProgress.stateNode) {
                 // 更新
                 // TODO 更新元素属性
+                // 不应该在此处调用updateFiberProps，应该跟着判断属性变化的逻辑，
+                // 在这里打flag，再在commitWork中更新fiberProps, 这个过程留到【属性变化】
+                // 相关需求一起做
+                updateFiberProps(
+                    workInProgress.stateNode,
+                    newProps
+                )
             } else {
-
                 // 初始化DOM
                 const instance = createInstance(workInProgress.type, newProps)
                 // 挂载DOM

@@ -38,7 +38,8 @@ function ChildReconciler(shouldTrackEffects: boolean) {
         }
         let childToDelete = currentFirstChild
         while(childToDelete !== null) {
-            //TODO
+            deleteChild(returnFiber, childToDelete)
+            childToDelete = childToDelete.sibling
         }
     }
 
@@ -90,6 +91,55 @@ function ChildReconciler(shouldTrackEffects: boolean) {
         return fiber
     }
 
+    function updateFromMap(
+        returnFiber: FiberNode,
+        existingChildren: ExistingChildren,
+        index: number,
+        element: ReactElement | string
+    ): FiberNode | null{
+        let keyToUse;
+        if(typeof element === 'string') {
+            keyToUse = index
+        } else {
+            keyToUse = element.key !== null ? element.key : index
+        }
+        const before = existingChildren.get(keyToUse)
+
+        if(typeof element === 'string') {
+            if(before) {
+                // fiber key相同， 如果type也相同，则可复用
+                existingChildren.delete(keyToUse)
+                if(before.tag === HostText) {
+                    // 复用文本节点
+                    return useFiber(before, {content: element})
+                } else {
+                    deleteChild(returnFiber, before)
+                }
+            }
+            // 新建文本节点
+            return new FiberNode(HostText, {content: element}, null)
+        }
+
+        if(typeof element === 'object' && element !== null) {
+            switch(element.$$typeof) {
+                case REACT_ELEMENT_TYPE:
+                    if(before) {
+                        // fiber相同，如果type也相同，则可复用
+                        existingChildren.delete(keyToUse)
+                        if(before.type === element.type) {
+                            // 复用
+                            return useFiber(before, element.props)
+                        } else {
+                            deleteChild(returnFiber, before)
+                        }
+                    }
+                    return createFiberFromElement(element)
+            }
+        }
+        console.error('updateFromMap未处理的情况，', before, element)
+        return null
+    }
+
     function reconcileSingleTextNode(
         returnFiber: FiberNode,
         currentFirstChild: FiberNode | null,
@@ -98,22 +148,91 @@ function ChildReconciler(shouldTrackEffects: boolean) {
         // 前:b 后:a
         // TODO 前:abc 后:a
         // TODO 前:bca 后:a
-        if(
-            currentFirstChild !== null &&
-            currentFirstChild.tag === HostText
-        ) {
-            const existing = useFiber(currentFirstChild, {content})
-            existing.return = returnFiber
-            return existing
+        let current = currentFirstChild
+        while(current !== null) {
+            if(current.tag === HostText) {
+                // 可以复用
+                const existing = useFiber(current, {content})
+                existing.return = returnFiber
+                deleteRemainingChildren(returnFiber, current.sibling)
+                return existing
+            }
+            // 不能复用
+            deleteChild(returnFiber, current)
         }
-
-        if(currentFirstChild !== null) {
-            deleteChild(returnFiber, currentFirstChild)
-        }
-
         const created = new FiberNode(HostText, {content}, null)
         created.return = returnFiber
         return created
+    }
+
+    function reconcileChildrenArray(
+        returnFiber: FiberNode,
+        currentFirstChild: FiberNode | null,
+        newChild: (ReactElement | string)[]
+    ) {
+        // 遍历到的最后一个可复用Fiber在before中的index
+        let lastPlaceIndex = 0
+        // 创建的第一个fiber
+        let lastNewFiber: FiberNode | null = null
+        // 创建的第一个fiber
+        let firstNewFiber: FiberNode | null = null
+
+        // 遍历前的准备工作,将current保存在map中
+        const existingChildren: ExistingChildren = new Map()
+        let current = currentFirstChild
+        while(current !== null) {
+            const keyToUse = current.key !== null ? current.key : current.index
+            existingChildren.set(keyToUse, current)
+            current = current.sibling
+        }
+
+        // 遍历流程
+        for(let i = 0; i < newChild.length; i++) {
+            const after = newChild[i]
+
+            // after对应的fiber,可能来自于复用,也可能是新建
+            const newFiber = updateFromMap(
+                returnFiber,
+                existingChildren,
+                i,
+                after
+            ) as FiberNode
+
+            newFiber.index = i
+            newFiber.return = returnFiber
+
+            if(lastNewFiber === null) {
+                lastNewFiber = firstNewFiber = newFiber
+            } else {
+                lastNewFiber = (lastNewFiber.sibling as FiberNode) = newFiber
+            }
+
+            if(!shouldTrackEffects) {
+                continue
+            }
+
+            const current = newFiber.alternate
+            if(current !== null) {
+                const oldIndex = current.index
+                if(oldIndex < lastPlaceIndex) {
+                    // 移动
+                    newFiber.flags |= Placement
+                    continue
+                } else {
+                    // 不移动
+                    lastPlaceIndex = oldIndex
+                }
+            } else {
+                // fiber不能复用,插入新节点
+                newFiber.flags |= Placement
+            }
+        }
+
+        // 遍历后的收尾工作,标记existingChildren中剩余的删除
+        existingChildren.forEach((fiber) => {
+            deleteChild(returnFiber, fiber)
+        })
+        return firstNewFiber
     }
 
     function reconcileChildFibers(
@@ -134,6 +253,14 @@ function ChildReconciler(shouldTrackEffects: boolean) {
                         )
                     )
             }
+
+            if(Array.isArray(newChild)) {
+                return reconcileChildrenArray(
+                    returnFiber, 
+                    currentFirstChild, 
+                    newChild
+                )
+            }
         }
         if(typeof newChild === 'string' || typeof newChild === 'number') {
             return placeSingleChild(
@@ -144,7 +271,7 @@ function ChildReconciler(shouldTrackEffects: boolean) {
                 )
             )
         }
-        console.error('reconcile 未实现的child类型')
+        console.error('reconcile 未实现的child类型', newChild, currentFirstChild)
         return null
     }
 

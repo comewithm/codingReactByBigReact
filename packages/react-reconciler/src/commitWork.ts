@@ -10,7 +10,9 @@ import {
     Container, 
     appendChildToContainer, 
     removeChild, 
-    commitTextUpdate 
+    commitTextUpdate,
+    Instance,
+    insertChildToContainer
 } from "./hostConfig";
 import { 
     FunctionComponent, 
@@ -92,8 +94,10 @@ const commitPlacement = (finishedWork: FiberNode) => {
     }
     const hostParent = getHostParent(finishedWork) as Container
 
+    const sibling = getHostSibling(finishedWork)
+
     // appendChild/insertBefore
-    appendPlacementNodeIntoContainer(finishedWork, hostParent)
+    insertOrAppendPlacementNodeIntoContainer(finishedWork, hostParent, sibling)
 }
 
 function getHostParent(fiber: FiberNode) {
@@ -112,19 +116,87 @@ function getHostParent(fiber: FiberNode) {
     console.error('getHostParent未找到hostParent')
 }
 
-function appendPlacementNodeIntoContainer(fiber: FiberNode, parent: Container) {
-    if(fiber.tag === HostComponent || fiber.tag === HostText) {
-        appendChildToContainer(fiber.stateNode, parent)
+function getHostSibling(fiber: FiberNode) {
+    let node: FiberNode = fiber
+    findSibling: while(true) {
+        while(node.sibling === null) {
+            // 如果当前节点没有sibling，则找他父级sibling
+            const parent = node.return
+            if(
+                parent === null || 
+                parent.tag === HostComponent ||
+                parent.tag === HostRoot
+            ) {
+                // 没找到
+               return null 
+            }
+            node = parent
+        }
+        node.sibling.return = node.return
+        // 向同级sibling寻找
+        node = node.sibling
+
+        while(
+            node.tag !== HostText &&
+            node.tag !== HostComponent
+        ) {
+            // 找到一个非Host fiber,向下找，直到找到第一个Host子孙
+            if(
+                (node.flags & Placement) !== NoFlags
+            ) {
+                // 这个fiber不稳定，不能用
+                continue findSibling
+            }
+
+            if(node.child === null) {
+                continue findSibling
+            } else {
+                node.child.return = node
+                node = node.child
+            }
+        }
+
+        // 找到最优可能的fiber
+        if(
+            (node.flags & Placement) === NoFlags
+        ) {
+            // 这是稳定的fiber
+            return node.stateNode
+        }
+    }
+}
+
+function insertOrAppendPlacementNodeIntoContainer(
+    fiber: FiberNode, 
+    parent: Container,
+    before?: Instance
+) {
+    if(
+        fiber.tag === HostComponent || 
+        fiber.tag === HostText
+    ) {
+        if(before) {
+            insertChildToContainer(
+                fiber.stateNode,
+                parent,
+                before
+            )
+        } else {
+            appendChildToContainer(
+                fiber.stateNode, 
+                parent
+            )
+        }
         return
     }
     const child = fiber.child
 
     if(child !== null) {
-        appendPlacementNodeIntoContainer(child, parent)
+        insertOrAppendPlacementNodeIntoContainer(child, parent)
         let sibling = child.sibling
 
         while(sibling !== null) {
-            appendPlacementNodeIntoContainer(sibling, parent)
+            insertOrAppendPlacementNodeIntoContainer(sibling, parent)
             sibling = sibling.sibling
         }
     }

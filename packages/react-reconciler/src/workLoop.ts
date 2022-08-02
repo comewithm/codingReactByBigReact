@@ -75,7 +75,7 @@ function performSyncWorkOnRoot(root: FiberRootNode) {
 
 function prepareFreshStack(root: FiberRootNode) {
     if(__LOG__) {
-        console.log(`初始化工作:${root}`);
+        console.log(`render阶段初始化工作:${root}`);
     }
     workInProgress = createWorkInProgress(root.current, {})
 }
@@ -110,7 +110,7 @@ function completeUnitOfWork(fiber: FiberNode) {
 
         const sibling = node.sibling
         if(sibling) {
-            workInProgress = next
+            workInProgress = sibling
             return
         }
 

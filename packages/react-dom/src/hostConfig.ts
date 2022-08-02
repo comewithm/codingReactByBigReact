@@ -23,6 +23,14 @@ export const appendChildToContainer = (child: Instance, container: Container) =>
     container.appendChild(child)
 }
 
+export const insertChildToContainer = (
+    child: Instance,
+    container: Container,
+    before: Instance
+) => {
+    container.insertBefore(before, child)
+}
+
 export const removeChild = (child: Instance, container:Container) => {
     container.removeChild(child)
 }
