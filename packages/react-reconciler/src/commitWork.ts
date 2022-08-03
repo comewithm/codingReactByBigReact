@@ -90,7 +90,7 @@ const commitMutationEffectsOnFiber = (finishedWork: FiberNode) => {
 
 const commitPlacement = (finishedWork: FiberNode) => {
     if(__LOG__) {
-        console.log(`插入、移动DOM:${finishedWork}`);
+        console.log(`插入、移动DOM:`, finishedWork);
     }
     const hostParent = getHostParent(finishedWork) as Container
 
