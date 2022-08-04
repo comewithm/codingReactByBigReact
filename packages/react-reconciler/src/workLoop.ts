@@ -8,14 +8,19 @@ import {beginWork} from './beginWork'
 import {completeWork} from './completeWork'
 import { NoFlags, MutationMask } from "./fiberTags";
 import {commitMutationEffects} from './commitWork'
+import { getHighestPriorityLane, Lane, Lanes, markRootFinished, mergeLanes, NoLane, NoLanes, SyncLane } from "./fiberLanes";
+import { flushSyncCallbacks, scheduleSyncCallback } from "./syncTaskQueue";
+import { scheduleMicrotask } from "./hostConfig";
 
 let workInProgress: FiberNode | null = null;
+let workInProgressRootRenderLane: Lanes = NoLanes
 
-export function scheduleUpdateOnFiber(fiber:FiberNode){
+export function scheduleUpdateOnFiber(fiber:FiberNode, lane: Lane){
     if(__LOG__) {
-        console.log(`开始schedule阶段:`, fiber);
+        console.log(`开始schedule阶段:`, fiber, lane);
     }
-    const root = markUpdateLaneFromFiberToRoot(fiber)
+    const root = markUpdateLaneFromFiberToRoot(fiber, lane)
+    markRootUpdated(root, lane)
 
     if(root === null){
         return
@@ -24,9 +29,19 @@ export function scheduleUpdateOnFiber(fiber:FiberNode){
     ensureRootIsScheduled(root)
 }
 
-function markUpdateLaneFromFiberToRoot(fiber:FiberNode) {
+function markRootUpdated(root: FiberRootNode, lane: Lane) {
+    root.pendingLanes = mergeLanes(root.pendingLanes, lane)
+}
+
+function markUpdateLaneFromFiberToRoot(fiber:FiberNode, lane: Lane) {
     let node = fiber
     let parent = node.return
+
+    node.lanes = mergeLanes(node.lanes, lane)
+    const alternate = node.alternate
+    if(alternate) {
+        alternate.lanes = mergeLanes(alternate.lanes, lane)
+    }
 
     while(parent !== null){
         node = parent
@@ -40,16 +55,39 @@ function markUpdateLaneFromFiberToRoot(fiber:FiberNode) {
 }
 
 function ensureRootIsScheduled(root:FiberRootNode) {
-    // 一些调度行为
-    performSyncWorkOnRoot(root)
+    const updateLane = getHighestPriorityLane(root.pendingLanes)
+    if(updateLane === NoLane) {
+        return
+    }
+    if(updateLane === SyncLane) {
+        if(__LOG__) {
+            console.log('在微任务中调度执行优先级：', updateLane)
+        }
+        // 微任务中调度执行
+        scheduleSyncCallback(
+            performSyncWorkOnRoot.bind(
+                null,
+                root,
+                updateLane
+            )
+        )
+        scheduleMicrotask(flushSyncCallbacks)
+    }
 }
 
-function performSyncWorkOnRoot(root: FiberRootNode) {
+function performSyncWorkOnRoot(root: FiberRootNode, lane: Lane) {
+    const nextLane = getHighestPriorityLane(root.pendingLanes)
+
+    if(nextLane !== SyncLane) {
+        ensureRootIsScheduled(root)
+        return
+    }
+
     if(__LOG__) {
         console.log(`开始render阶段:`, root);
     }
     // 初始化操作
-    prepareFreshStack(root)
+    prepareFreshStack(root, lane)
 
     // render阶段具体操作
     do {
@@ -65,19 +103,22 @@ function performSyncWorkOnRoot(root: FiberRootNode) {
     if(workInProgress !== null) {
         console.error('render阶段结束 wip不为null')
     }
-
+    
+    workInProgressRootRenderLane = NoLane
     const finishedWork = root.current.alternate
     root.finishedWork = finishedWork
+    root.finishedLane = lane
 
     // commit阶段操作
     commitRoot(root)
 }
 
-function prepareFreshStack(root: FiberRootNode) {
+function prepareFreshStack(root: FiberRootNode, lane: Lane) {
     if(__LOG__) {
         console.log(`render阶段初始化工作:`, root);
     }
     workInProgress = createWorkInProgress(root.current, {})
+    workInProgressRootRenderLane = lane
 }
 
 function workLoop(){
@@ -87,7 +128,7 @@ function workLoop(){
 }
 
 function performUnitOfWork(fiber: FiberNode) {
-    const next = beginWork(fiber)
+    const next = beginWork(fiber, workInProgressRootRenderLane)
     // 执行完beginWork后，pendingProps 变为 memoizedProps
     fiber.memoizedProps = fiber.pendingProps
     if(next === null) {
@@ -122,16 +163,24 @@ function completeUnitOfWork(fiber: FiberNode) {
 
 
 function commitRoot(root:FiberRootNode) {
-    if(__LOG__) {
-        console.log(`开始commit阶段:`, root);
-    }
     const finishedWork = root.finishedWork
-
+    
     if(finishedWork === null) {
         return
     }
+    if(__LOG__) {
+        console.log(`开始commit阶段:`, root);
+    }
+    const lane = root.finishedLane
     // 重置
     root.finishedWork = null
+    root.finishedLane = NoLane
+
+    markRootFinished(root, lane)
+
+    if(lane === NoLane) {
+        console.error('commit阶段finishedLane不应该是NoLane')
+    }
 
     const subtreeHasEffect = (finishedWork.subtreeFlags & MutationMask) !== NoFlags
 

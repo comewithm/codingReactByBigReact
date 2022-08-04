@@ -1,4 +1,5 @@
 import { Props, Key, Ref, ReactElement } from "shared/ReactTypes";
+import { Lane, Lanes, NoLane, NoLanes } from "./fiberLanes";
 import {Flags, NoFlags} from './fiberTags'
 import {Container} from './hostConfig'
 import {WorkTag, HostComponent, FunctionComponent} from './workTags'
@@ -94,6 +95,7 @@ export class FiberNode {
      */
     alternate: FiberNode | null
 
+    lanes: Lanes
     /**
      * 
      * @param tag fiber类型
@@ -125,6 +127,9 @@ export class FiberNode {
         this.subtreeFlags = NoFlags
         this.deletions = null
 
+        // 调度
+        this.lanes = NoLane
+
         this.alternate = null
     }
 }
@@ -137,11 +142,17 @@ export class FiberRootNode {
      */
     current: FiberNode
     finishedWork: FiberNode | null
+    /** 所有未执行的lane集合 */
+    pendingLanes: Lanes
+    /** 本轮更新执行的lane */
+    finishedLane: Lane
     constructor(container:Container, hostRootFiber:FiberNode){
         this.container = container
         this.current = hostRootFiber
         hostRootFiber.stateNode = this
         this.finishedWork = null
+        this.pendingLanes = NoLanes
+        this.finishedLane = NoLane
     }
 }
 
@@ -175,6 +186,8 @@ export const createWorkInProgress = (
     // 数据
     wip.memoizedProps = current.memoizedProps
     wip.memoizedState = current.memoizedState
+
+    wip.lanes = current.lanes
 
     return wip
 

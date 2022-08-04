@@ -41,3 +41,11 @@ export const commitTextUpdate = (
 ) => {
     textInstance.nodeValue = content
 }
+
+
+export const scheduleMicrotask = 
+    typeof queueMicrotask === 'function'
+        ? queueMicrotask
+        : typeof Promise === 'function'
+            ? (callback: () => void) => Promise.resolve(null).then(callback)
+            : setTimeout

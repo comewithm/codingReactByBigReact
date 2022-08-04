@@ -24,7 +24,13 @@ function App() {
 
     return (
         <ul
-            onClick={(e) => {updateNum(num + 1)}}
+            onClick={(e) => {
+                // updateNum(num + 1)
+                updateNum((num: number) => num + 1);
+				updateNum((num: number) => num + 2);
+				updateNum((num: number) => num + 3);
+				updateNum((num: number) => num + 4);
+            }}
         >
             {listToUse}
         </ul>
