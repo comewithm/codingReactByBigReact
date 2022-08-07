@@ -192,11 +192,11 @@ function insertOrAppendPlacementNodeIntoContainer(
     const child = fiber.child
 
     if(child !== null) {
-        insertOrAppendPlacementNodeIntoContainer(child, parent)
+        insertOrAppendPlacementNodeIntoContainer(child, parent, before)
         let sibling = child.sibling
 
         while(sibling !== null) {
-            insertOrAppendPlacementNodeIntoContainer(sibling, parent)
+            insertOrAppendPlacementNodeIntoContainer(sibling, parent, before)
             sibling = sibling.sibling
         }
     }

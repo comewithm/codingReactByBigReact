@@ -159,6 +159,7 @@ function ChildReconciler(shouldTrackEffects: boolean) {
             }
             // 不能复用
             deleteChild(returnFiber, current)
+            current = current.sibling
         }
         const created = new FiberNode(HostText, {content}, null)
         created.return = returnFiber

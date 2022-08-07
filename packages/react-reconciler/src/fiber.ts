@@ -121,6 +121,7 @@ export class FiberNode {
         this.pendingProps = pendingProps
         this.memoizedProps = null
         this.updateQueue = null
+        this.memoizedState = null
 
         // 副作用
         this.flags = NoFlags
