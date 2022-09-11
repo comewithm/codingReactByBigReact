@@ -1,4 +1,4 @@
-import {useState, useEffect} from 'react'
+import {useState, useEffect} from '../../packages/react'
 import {createRoot} from 'react-dom/client'
 
 function App() {

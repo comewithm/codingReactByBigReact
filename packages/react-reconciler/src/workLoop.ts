@@ -252,6 +252,7 @@ function commitRoot(root:FiberRootNode) {
         root.current = finishedWork
 
         // 阶段3/3: Layout
+        executionContext = preExecutionContext
     } else {
         // Fiber Tree切换
         root.current = finishedWork
