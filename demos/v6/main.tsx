@@ -7,13 +7,16 @@ function App() {
     const idOdd = num % 2
 
     return (
-        <h3
-            onClick={(e) => {
-                updateNum(Math.ceil(Math.random() * 1000))
-            }}
-        >
-            {idOdd ? <Child num={num} /> : <p>click!!!</p>}
-        </h3>
+        <div>
+            <h3
+                onClick={(e) => {
+                    updateNum(Math.ceil(Math.random() * 1000))
+                }}
+            >
+                {idOdd ? <Child num={num} /> : <p>click!!!</p>}
+            </h3>
+            <p>brother text</p>
+        </div>
     )
 }
 
