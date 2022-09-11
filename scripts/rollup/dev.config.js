@@ -4,6 +4,8 @@ import resolve from '@rollup/plugin-babel'
 import replace from '@rollup/plugin-replace'
 import generatePackageJson from 'rollup-plugin-generate-package-json'
 
+import cjs from '@rollup/plugin-commonjs'
+
 const tsConfig = {
     tsConfig: 'tsconfig.json'
 }
@@ -21,6 +23,7 @@ function resolvePkgPath(pkgName, isDist) {
 const basePlugins = [
     typescript(tsConfig),
     resolve(),
+    cjs(),
     replace({
         __LOG__: false,
         preventAssignment: true

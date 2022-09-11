@@ -11,7 +11,7 @@ import {
     Instance, 
     createTextInstance
 } from './hostConfig'
-import { NoFlags, Update } from "./fiberTags";
+import { NoFlags, Update } from "./fiberFlags";
 import {updateFiberProps} from 'react-dom/src/SyntheticEvent'
 
 const appendAllChildren = (parent: Instance, workInProgress: FiberNode) => {

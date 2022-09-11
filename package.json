@@ -8,7 +8,8 @@
 		"build:dev": "rm -rf dist && rollup --config scripts/rollup/dev.config.js",
 		"demo6": "vite serve demos/v6 --config demos/vite.config.js",
 		"demo7": "vite serve demos/v7 --config demos/vite.config.js --force",
-		"lint": "eslint --ext .js,.ts,.jsx,.tsx --fix --quiet ./packages",
+		"demo9": "vite serve demos/v9 --config demos/vite.config.js --force",
+		"lint": "eslint --ext .ts,.jsx,.tsx --fix --quiet ./packages",
 		"test": "jest"
 	},
 	"devDependencies": {
@@ -19,6 +20,7 @@
 		"@commitlint/cli": "^17.0.2",
 		"@commitlint/config-conventional": "^17.0.2",
 		"@rollup/plugin-babel": "^5.3.1",
+		"@rollup/plugin-commonjs": "^22.0.1",
 		"@rollup/plugin-node-resolve": "^13.3.0",
 		"@rollup/plugin-replace": "^4.0.0",
 		"@types/react": "^18.0.15",

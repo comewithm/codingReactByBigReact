@@ -1,7 +1,7 @@
 import { REACT_ELEMENT_TYPE } from "shared/ReactSymbols";
 import { Props, ReactElement } from "shared/ReactTypes"
 import { FiberNode, createFiberFromElement, createWorkInProgress } from "./fiber"
-import { ChildDeletion, Placement } from "./fiberTags";
+import { ChildDeletion, Placement } from "./fiberFlags";
 import { HostText } from "./workTags";
 
 /**
@@ -95,17 +95,25 @@ function ChildReconciler(shouldTrackEffects: boolean) {
         returnFiber: FiberNode,
         existingChildren: ExistingChildren,
         index: number,
-        element: ReactElement | string | number
+        element: ReactElement | string | number | null
     ): FiberNode | null{
         let keyToUse;
-        if(typeof element === 'string' || typeof element === 'number') {
+        if(
+            element === null ||
+            typeof element === 'string' || 
+            typeof element === 'number'
+        ) {
             keyToUse = index
         } else {
             keyToUse = element.key !== null ? element.key : index
         }
         const before = existingChildren.get(keyToUse)
 
-        if(typeof element === 'string' || typeof element === 'number') {
+        if(
+            element === null ||
+            typeof element === 'string' || 
+            typeof element === 'number'
+        ) {
             if(before) {
                 // fiber key相同， 如果type也相同，则可复用
                 existingChildren.delete(keyToUse)
@@ -117,7 +125,9 @@ function ChildReconciler(shouldTrackEffects: boolean) {
                 }
             }
             // 新建文本节点
-            return new FiberNode(HostText, {content: element}, null)
+            return element === null 
+                    ? null
+                    : new FiberNode(HostText, {content: element}, null)
         }
 
         if(typeof element === 'object' && element !== null) {
@@ -136,7 +146,7 @@ function ChildReconciler(shouldTrackEffects: boolean) {
                     return createFiberFromElement(element)
             }
         }
-        console.error('updateFromMap未处理的情况，', before, element)
+        // console.error('updateFromMap未处理的情况，', before, element)
         return null
     }
 
@@ -206,6 +216,17 @@ function ChildReconciler(shouldTrackEffects: boolean) {
                 i,
                 after
             ) as FiberNode
+
+            /**
+             * 考虑如下情况：
+             * 更新前：你好{123}
+             * 更新后：你好{undefined}
+             * 或者： 你好{false}
+             * 或者： 你好{undefined}
+             */
+            if(newFiber === null) {
+                continue
+            }
 
             newFiber.index = i
             newFiber.return = returnFiber
@@ -280,7 +301,7 @@ function ChildReconciler(shouldTrackEffects: boolean) {
                 )
             )
         }
-        console.error('reconcile 未实现的child类型', newChild, currentFirstChild)
+        console.warn('reconcile 未实现的child类型', newChild, currentFirstChild)
         return null
     }
 
