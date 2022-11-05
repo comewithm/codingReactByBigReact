@@ -6,8 +6,5 @@
 	"dependencies": {
 		"shared": "workspace:*",
 		"react-reconciler": "workspace:*"
-	},
-	"peerDependencies": {
-		"react": "workspace:*"
 	}
 }

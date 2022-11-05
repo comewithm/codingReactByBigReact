@@ -5,7 +5,6 @@
 	"main": "index.js",
 	"dependencies": {
 		"shared": "workspace:*",
-		"react-dom": "workspace:*",
-		"react": "workspace:*"
+		"react-dom": "workspace:*"
 	}
 }

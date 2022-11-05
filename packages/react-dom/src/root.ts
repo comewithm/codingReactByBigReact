@@ -1,19 +1,17 @@
-import {Container} from './hostConfig'
+import { Container } from './hostConfig';
 
 import {
-    createContainer,
-    updateContainer
-} from 'react-reconciler/src/fiberReconciler'
+	createContainer,
+	updateContainer
+} from '../../../packages/react-reconciler/src/fiberReconciler';
+import { ReactElement } from '../../shared/ReactTypes';
 
-import {ReactElement} from 'shared/ReactTypes'
-import {initEvent} from './SyntheticEvent'
+export function createRoot(container: Container) {
+	const root = createContainer(container);
 
-export function createRoot(container:Container) {
-    const root = createContainer(container)
-    return {
-        render(element:ReactElement) {
-            initEvent(container, 'click')
-            return updateContainer(element, root)
-        }
-    }
+	return {
+		render(element: ReactElement) {
+			updateContainer(element, root);
+		}
+	};
 }

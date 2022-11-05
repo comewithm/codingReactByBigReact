@@ -1,81 +1,60 @@
-import { FiberNode } from "./fiber"
-import {Action} from 'shared/ReactTypes'
-import { Dispatch } from "react/src/currentDispatcher"
+import { FiberNode } from './fiber';
 
+type UpdateAction = any;
 
-export interface Update<State> {
-    action: Action<State>
+export interface Update {
+	action: UpdateAction;
 }
 
-export interface UpdateQueue<State> {
-    shared: {
-        pending: Update<State> | null
-    }
-    dispatch: Dispatch<State> | null
+export interface UpdateQueue {
+	shared: {
+		pending: Update | null;
+	};
 }
 
 // 初始化
-// export const initializeUpdateQueue = (fiber:FiberNode) => {
-//     fiber.updateQueue = {
-//         shared: {
-//             pending: null
-//         }
-//     }
-// }
-
-// 初始化
-export const createUpdateQueue = <Action>() => {
-    const updateQueue: UpdateQueue<Action> = {
-        shared: {
-            pending: null
-        },
-        dispatch: null
-    } 
-    return updateQueue
-}
+export const initializeUpdateQueue = (fiber: FiberNode) => {
+	fiber.updateQueue = {
+		shared: {
+			pending: null
+		}
+	};
+};
 
 // 创建
-export const createUpdate = <State>(action: Action<State>) => {
-    if(__LOG__) {
-        console.log(`创建update:`, action);
-    }
-    return {
-        action
-    }
-}
+export const createUpdate = (action: UpdateAction) => {
+	return {
+		action
+	};
+};
 
 // 插入
-export const enqueueUpdate = <Action>(
-    updateQueue:UpdateQueue<Action>, 
-    update: Update<Action>
-) => {
-    if(__LOG__) {
-        console.log(`将update插入更新队列:`, update);
-    }
-    updateQueue.shared.pending = update
-}
+export const enqueueUpdate = (fiber: FiberNode, update: Update) => {
+	const updateQueue = fiber.updateQueue;
+	if (updateQueue !== null) {
+		updateQueue.shared.pending = update;
+	}
+};
 
-// TODO:消费???
-export const processUpdateQueue = <State>(
-    baseState: State,
-    updateQueue: UpdateQueue<State>,
-    fiber:FiberNode
-) => {
-    if(updateQueue !== null) {
-        const pending = updateQueue.shared.pending
-        const pendingUpdate = pending
-        updateQueue.shared.pending = null
+export const processUpdateQueue = (fiber: FiberNode) => {
+	const updateQueue = fiber.updateQueue;
+	let newState = null;
 
-        if(pendingUpdate !== null) {
-            const action = pendingUpdate.action
-            if(action instanceof Function) {
-                baseState = action(baseState)
-            } else {
-                baseState = action
-            }
-        }        
-    } else {
-        console.error(fiber, 'processUpdateQueue时 updateQueue不存在')
-    }
-    return baseState
-}
+	if (updateQueue) {
+		const pending = updateQueue.shared.pending;
+		const pendingUpdate = pending;
+		updateQueue.shared.pending = null;
+
+		if (pendingUpdate !== null) {
+			const action = pendingUpdate.action;
+			if (typeof action === 'function') {
+				newState = action();
+			} else {
+				newState = action;
+			}
+		}
+	} else {
+		console.error(fiber, 'processUpdateQueue时 updateQueue不存在');
+	}
+	fiber.memoizedState = newState;
+};
