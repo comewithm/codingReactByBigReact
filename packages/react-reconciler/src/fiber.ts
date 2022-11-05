@@ -1,9 +1,8 @@
-import { Key, Props, Ref } from '../../shared/ReactTypes';
-import { Flags, NoFlags } from './fiberTags';
+import { Key, Props, Ref, ReactElement } from 'shared/ReactTypes';
+import { Flags, NoFlags } from './fiberFlags';
 import { FunctionComponent, HostComponent, WorkTag } from './workTags';
 import { UpdateQueue } from './updateQueue';
 import { Container } from './hostConfig';
-import { ReactElement } from '../../shared/ReactTypes';
 
 export class FiberNode {
 	pendingProps: Props;
@@ -62,11 +61,13 @@ export class FiberNode {
 export class FiberRootNode {
 	container: Container;
 	current: FiberNode;
-
+	finishedWork: FiberNode | null;
 	constructor(container: Container, hostRootFiber: FiberNode) {
 		this.container = container;
 		this.current = hostRootFiber;
 		hostRootFiber.stateNode = this;
+
+		this.finishedWork = null;
 	}
 }
 

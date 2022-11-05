@@ -1,4 +1,4 @@
-import { ReactElement } from '../../shared/ReactTypes';
+import { ReactElement } from 'shared/ReactTypes';
 import { Container } from './hostConfig';
 
 import { HostRoot } from './workTags';

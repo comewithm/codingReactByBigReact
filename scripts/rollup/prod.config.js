@@ -1,4 +1,4 @@
-import reactPkg from '../../packages/react/package.json';
+import reactPkg from 'react/package.json';
 import typescript from 'rollup-plugin-typescript2';
 import path from 'path';
 import resolve from '@rollup/plugin-babel';

@@ -1,7 +1,7 @@
-import { REACT_ELEMENT_TYPE } from '../../shared/ReactSymbols';
-import { ReactElement } from '../../shared/ReactTypes';
+import { REACT_ELEMENT_TYPE } from 'shared/ReactSymbols';
+import { ReactElement } from 'shared/ReactTypes';
 import { createFiberFromElement, FiberNode } from './fiber';
-import { Placement } from './fiberTags';
+import { Placement } from './fiberFlags';
 
 function ChildReconciler(shouldTrackEffect: boolean) {
 	function reconcileSingleElement(

@@ -1,9 +1,16 @@
 import { FiberNode } from './fiber';
-import { NoFlags } from './fiberTags';
-import { Instance, createInstance, appendInitialChild } from './hostConfig';
-import { HostComponent, HostRoot } from './workTags';
+import { NoFlags } from './fiberFlags';
+import {
+	Instance,
+	createInstance,
+	appendInitialChild,
+	createTextInstance
+} from './hostConfig';
+import { HostComponent, HostRoot, HostText } from './workTags';
 
 export const completeWork = (workInProgress: FiberNode) => {
+	const newProps = workInProgress.pendingProps;
+
 	switch (workInProgress.tag) {
 		case HostComponent:
 			// 初始化DOM
@@ -20,7 +27,12 @@ export const completeWork = (workInProgress: FiberNode) => {
 		case HostRoot:
 			bubbleProperties(workInProgress);
 			return null;
-
+		case HostText:
+			// 初始化
+			const textInstance = createTextInstance(newProps.content);
+			workInProgress.stateNode = textInstance;
+			bubbleProperties(workInProgress);
+			return null;
 		default:
 			console.error('completeWork未定义的fiber.tag', workInProgress);
 			return null;

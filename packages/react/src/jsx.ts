@@ -1,11 +1,5 @@
-import { REACT_ELEMENT_TYPE } from '../../shared/ReactSymbols';
-import {
-	ElementType,
-	Key,
-	Ref,
-	Props,
-	ReactElement
-} from '../../shared/ReactTypes';
+import { REACT_ELEMENT_TYPE } from 'shared/ReactSymbols';
+import { ElementType, Key, Ref, Props, ReactElement } from 'shared/ReactTypes';
 
 function hasValidKey(config: any) {
 	return config.key !== undefined;
