@@ -1,5 +1,9 @@
 import currentDispatcher, { Dispatcher, resolveDispatcher } from "./src/currentDispatcher"
 
+import {jsxDEV, isValidElement as isValidElementFn} from './src/jsx'
+
+export const createElement = jsxDEV
+export const isValidElement = isValidElementFn
 
 export const useState = <State>(initialState:(() => State | State)) => {
 	const dispatcher = resolveDispatcher() as Dispatcher

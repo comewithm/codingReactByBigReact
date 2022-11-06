@@ -18,6 +18,7 @@ function resolvePkgPath(pkgName, isDist) {
 
 
 export default [
+    // react-dom
     {
         input: `${resolvePkgPath('react-dom', false)}/index.ts`,
         output: [
@@ -47,6 +48,7 @@ export default [
             })
         ]
     },
+    // react
     {
         input: `${resolvePkgPath('react', false)}/index.ts`,
         output: {
@@ -69,13 +71,34 @@ export default [
             })
         ]
     },
+    // jsx-runtime
     {
         input: `${resolvePkgPath('react', false)}/src/jsx.ts`,
-        output: {
-            file: `${resolvePkgPath('react', true)}/jsx-dev-runtime.js`,
-            name: 'jsx-dev-runtime.js',
-            format: 'umd'
-        },
+        output: [
+            {
+                file: `${resolvePkgPath('react', true)}/jsx-dev-runtime.js`,
+                name: 'jsx-dev-runtime.js',
+                format: 'umd'
+            },
+            {
+                file: `${resolvePkgPath('react', true)}/jsx-runtime.js`,
+                name: 'jsx-runtime.js',
+                format: 'umd'
+            },
+        ],
+        plugins: [typescript(tsConfig), resolve()]
+    },
+    // react-test-utils
+    {
+        input: `${resolvePkgPath('react-dom', false)}/test-utils.ts`,
+        external: ['react', 'react-dom'],
+        output: [
+            {
+                file: `${resolvePkgPath('react-dom', true)}/test-utils.js`,
+                name: 'test-utils.js',
+                format: 'umd'
+            }
+        ],
         plugins: [typescript(tsConfig), resolve()]
     }
 ]

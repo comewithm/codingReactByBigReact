@@ -52,6 +52,7 @@ function ChildReconciler(shouldTrackEffect: boolean) {
 					);
 			}
 		}
+		// 文本
 		if(typeof newChild === 'string' || typeof newChild === 'number') {
 			return placeSingleChild(
 				reconcileSingleTextNode(
