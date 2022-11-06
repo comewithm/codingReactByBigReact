@@ -1,7 +1,6 @@
 import { Key, Props, Ref, ReactElement } from 'shared/ReactTypes';
 import { Flags, NoFlags } from './fiberFlags';
 import { FunctionComponent, HostComponent, WorkTag } from './workTags';
-import { UpdateQueue } from './updateQueue';
 import { Container } from './hostConfig';
 
 export class FiberNode {
@@ -20,7 +19,7 @@ export class FiberNode {
 	child: FiberNode | null;
 	index: number;
 
-	updateQueue: UpdateQueue | null;
+	updateQueue: unknown;
 	memoizedState: any;
 
 	alternate: FiberNode | null;

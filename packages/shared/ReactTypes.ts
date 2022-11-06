@@ -14,3 +14,6 @@ export interface ReactElement {
 	ref: Ref;
 	__mark: 'kasong';
 }
+
+
+export type Action<State> = State | ((preState:State) => State)

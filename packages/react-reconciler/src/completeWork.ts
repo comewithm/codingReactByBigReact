@@ -6,7 +6,7 @@ import {
 	appendInitialChild,
 	createTextInstance
 } from './hostConfig';
-import { HostComponent, HostRoot, HostText } from './workTags';
+import { FunctionComponent, HostComponent, HostRoot, HostText } from './workTags';
 
 export const completeWork = (workInProgress: FiberNode) => {
 	const newProps = workInProgress.pendingProps;
@@ -33,6 +33,9 @@ export const completeWork = (workInProgress: FiberNode) => {
 			workInProgress.stateNode = textInstance;
 			bubbleProperties(workInProgress);
 			return null;
+		case FunctionComponent:
+			bubbleProperties(workInProgress)
+			return null
 		default:
 			console.error('completeWork未定义的fiber.tag', workInProgress);
 			return null;
@@ -43,7 +46,7 @@ const appendAllChildren = (parent: Instance, workInProgress: FiberNode) => {
 	// 遍历workInProgress 所有子孙 DOM元素, 依次挂载
 	let node = workInProgress.child;
 	while (node !== null) {
-		if (node.tag === HostComponent) {
+		if (node.tag === HostComponent || node.tag === HostText) {
 			appendInitialChild(parent, node.stateNode);
 		} else if (node.child !== null) {
 			node.child.return = node;

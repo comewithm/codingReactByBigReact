@@ -28,7 +28,7 @@ export default [
             },
             {
                 file: `${resolvePkgPath('react-dom', true)}/index.js`,
-                name: 'client.js',
+                name: 'index.js',
                 format: 'umd'
             }
         ],
