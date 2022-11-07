@@ -8,6 +8,9 @@ import { HostRoot } from './workTags';
 let workInProgress: FiberNode | null = null;
 
 export function scheduleUpdateOnFiber(fiber: FiberNode) {
+	if(__DEV__) {
+		console.log('开始schedule阶段', fiber)
+	}
 	const root = markUpdateLaneFromFiberToRoot(fiber);
 	if (root === null) {
 		return;
@@ -35,6 +38,9 @@ function ensureRootIsScheduled(root: FiberRootNode) {
 }
 
 function performSyncWorkOnRoot(root: FiberRootNode) {
+	if(__DEV__) {
+		console.log('开始render阶段', root)
+	}
 	// 初始化操作
 	prepareFreshStack(root);
 
@@ -60,6 +66,7 @@ function performSyncWorkOnRoot(root: FiberRootNode) {
 }
 
 function commitRoot(root: FiberRootNode) {
+	console.log('开始commit阶段', root)
 	const finishedWork = root.finishedWork;
 
 	if (finishedWork === null) {
@@ -90,6 +97,9 @@ function commitRoot(root: FiberRootNode) {
 }
 
 function prepareFreshStack(root: FiberRootNode) {
+	if(__DEV__) {
+		console.log('初始化工作', root)
+	}
 	workInProgress = createWorkInProgress(root.current, {});
 }
 

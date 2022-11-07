@@ -1,10 +1,13 @@
+import { updateEventProps } from "./SyntheticEvent";
+
 export type Container = Element | Document;
 export type Instance = Element;
 
 export type TextInstance = Text
 
-export const createInstance = (type: string) => {
-	return document.createElement(type);
+export const createInstance = (type: string, props: any) => {
+	const element = document.createElement(type);
+	return updateEventProps(element, props)
 };
 
 export const createTextInstance = (content: string) => {

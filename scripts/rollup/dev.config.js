@@ -1,11 +1,20 @@
 import path from 'path'
 import typescript from 'rollup-plugin-typescript2'
 import resolve from '@rollup/plugin-babel'
+import replace from '@rollup/plugin-replace'
 import generatePackageJson from 'rollup-plugin-generate-package-json'
 
 const tsConfig = {
     tsConfig: 'tsConfig.json'
 }
+
+const basePlugins = [
+    typescript(tsConfig),
+    resolve(),
+    replace({
+        __DEV__: process.env.NODE_ENV !== 'production'
+    })
+]
 
 function resolvePkgPath(pkgName, isDist) {
     const pkgPath = path.resolve(__dirname, '../../packages')
@@ -34,8 +43,7 @@ export default [
             }
         ],
         plugins: [
-            typescript(tsConfig),
-            resolve(),
+            ...basePlugins,
             generatePackageJson({
                 inputFolder: resolvePkgPath('react-dom', false),
                 outputFolder: resolvePkgPath('react-dom ', true),
@@ -57,8 +65,7 @@ export default [
             format: 'umd'
         },
         plugins: [
-            typescript(tsConfig),
-            resolve(),
+            ...basePlugins,
             generatePackageJson({
                 inputFolder: resolvePkgPath('react', false),
                 outputFolder: resolvePkgPath('react', true),
@@ -86,7 +93,7 @@ export default [
                 format: 'umd'
             },
         ],
-        plugins: [typescript(tsConfig), resolve()]
+        plugins: basePlugins
     },
     // react-test-utils
     {
@@ -99,6 +106,6 @@ export default [
                 format: 'umd'
             }
         ],
-        plugins: [typescript(tsConfig), resolve()]
+        plugins: basePlugins
     }
 ]

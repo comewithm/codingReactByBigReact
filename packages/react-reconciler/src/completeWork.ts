@@ -9,6 +9,9 @@ import {
 import { FunctionComponent, HostComponent, HostRoot, HostText } from './workTags';
 
 export const completeWork = (workInProgress: FiberNode) => {
+	if(__DEV__) {
+		console.log('创建update', workInProgress.type)
+	}
 	const newProps = workInProgress.pendingProps;
 	const current = workInProgress.alternate
 
@@ -18,8 +21,9 @@ export const completeWork = (workInProgress: FiberNode) => {
 				// 更新
 				// TODO: 更新元素属性
 			} else {
-				// 初始化DOM
-				const instance = createInstance(workInProgress.type);
+				// 初始化DOM props属性给传入
+				// <div onClick={() => {}}>button</div>
+				const instance = createInstance(workInProgress.type, newProps);
 				// 挂载DOM
 				appendAllChildren(instance, workInProgress);
 				workInProgress.stateNode = instance;
