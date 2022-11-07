@@ -122,7 +122,7 @@ function performUnitOfWork(fiber: FiberNode) {
 }
 
 function completeUnitOfWork(fiber: FiberNode) {
-	const node: FiberNode | null = fiber;
+	let node: FiberNode | null = fiber;
 	do {
 		const next = completeWork(node);
 
@@ -135,5 +135,7 @@ function completeUnitOfWork(fiber: FiberNode) {
 			workInProgress = sibling;
 			return;
 		}
+		node = node.return
+		workInProgress = node
 	} while (node !== null);
 }
