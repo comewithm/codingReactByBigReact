@@ -13,6 +13,7 @@ export class FiberNode {
 	tag: WorkTag;
 	flags: Flags;
 	subtreeFlags: Flags;
+	deletions: FiberNode[] | null;
 
 	return: FiberNode | null;
 	sibling: FiberNode | null;
@@ -48,6 +49,7 @@ export class FiberNode {
 		// 副作用
 		this.flags = NoFlags;
 		this.subtreeFlags = NoFlags;
+		this.deletions = null
 
 		// 调度
 		// this.lanes = NoLanes
@@ -87,6 +89,10 @@ export const createWorkInProgress = (
 	} else {
 		// update
 		wip.pendingProps = pendingProps;
+		wip.flags = NoFlags
+		wip.subtreeFlags = NoFlags
+		wip.deletions = null
+		wip.type = current.type
 	}
 
 	wip.updateQueue = current.updateQueue;

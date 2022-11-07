@@ -1,5 +1,5 @@
 import { FiberNode } from './fiber';
-import { NoFlags } from './fiberFlags';
+import { NoFlags, Update } from './fiberFlags';
 import {
 	Instance,
 	createInstance,
@@ -10,16 +10,22 @@ import { FunctionComponent, HostComponent, HostRoot, HostText } from './workTags
 
 export const completeWork = (workInProgress: FiberNode) => {
 	const newProps = workInProgress.pendingProps;
+	const current = workInProgress.alternate
 
 	switch (workInProgress.tag) {
 		case HostComponent:
-			// 初始化DOM
-			const instance = createInstance(workInProgress.type);
-			// 挂载DOM
-			appendAllChildren(instance, workInProgress);
-			workInProgress.stateNode = instance;
-
-			// 初始化元素属性 TODO
+			if(current !== null && workInProgress.stateNode) {
+				// 更新
+				// TODO: 更新元素属性
+			} else {
+				// 初始化DOM
+				const instance = createInstance(workInProgress.type);
+				// 挂载DOM
+				appendAllChildren(instance, workInProgress);
+				workInProgress.stateNode = instance;
+	
+				// 初始化元素属性 TODO
+			}
 
 			// 冒泡flag
 			bubbleProperties(workInProgress);
@@ -28,9 +34,18 @@ export const completeWork = (workInProgress: FiberNode) => {
 			bubbleProperties(workInProgress);
 			return null;
 		case HostText:
-			// 初始化
-			const textInstance = createTextInstance(newProps.content);
-			workInProgress.stateNode = textInstance;
+			if(current !== null && workInProgress.stateNode) {
+				// 更新
+				const oldText = current.memoizedProps?.content
+				const newText = newProps.content
+				if(oldText !== newText) {
+					markUpdate(workInProgress)
+				}
+			} else {
+				// 初始化
+				const textInstance = createTextInstance(newProps.content);
+				workInProgress.stateNode = textInstance;
+			}
 			bubbleProperties(workInProgress);
 			return null;
 		case FunctionComponent:
@@ -41,6 +56,10 @@ export const completeWork = (workInProgress: FiberNode) => {
 			return null;
 	}
 };
+
+function markUpdate(fiber: FiberNode) {
+	fiber.flags |= Update
+}
 
 const appendAllChildren = (parent: Instance, workInProgress: FiberNode) => {
 	// 遍历workInProgress 所有子孙 DOM元素, 依次挂载
