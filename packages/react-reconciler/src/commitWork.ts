@@ -1,7 +1,25 @@
 import { FiberNode, FiberRootNode } from './fiber';
-import { ChildDeletion, MutationMask, NoFlags, Placement, Update } from './fiberFlags';
-import { Container, appendChildToContainer, commitTextUpdate, removeChild } from './hostConfig';
-import { FunctionComponent, HostComponent, HostRoot, HostText } from './workTags';
+import { 
+	ChildDeletion, 
+	MutationMask, 
+	NoFlags, 
+	Placement, 
+	Update 
+} from './fiberFlags';
+import { 
+	Container, 
+	appendChildToContainer, 
+	insertChildToContainer,
+	commitTextUpdate, 
+	removeChild,
+	Instance 
+} from './hostConfig';
+import { 
+	FunctionComponent, 
+	HostComponent, 
+	HostRoot, 
+	HostText 
+} from './workTags';
 
 let nextEffect: FiberNode | null = null;
 
@@ -59,17 +77,24 @@ const commitMutationEffectsOnFiber = (finishedWork: FiberNode) => {
 };
 
 const commitPlacement = (finishedWork: FiberNode) => {
-	if(__DEV__) {
+	if(__LOG__) {
 		console.log('插入，移动DOM', finishedWork)
 	}
 	const hostParent = getHostParent(finishedWork) as Container;
 
+	const sibling = getHostSibling(finishedWork)
+
 	// appendChild / insertBefore
-	appendPlacementNodeIntoContainer(finishedWork, hostParent);
+	// appendPlacementNodeIntoContainer(finishedWork, hostParent);
+	insertOrAppendPlacementNodeIntoContainer(
+		finishedWork,
+		hostParent,
+		sibling
+	)
 };
 
 function commitUpdate(finishedWork: FiberNode) {
-	if(__DEV__) {
+	if(__LOG__) {
 		console.log('更新DOM,文本节点内容', finishedWork)
 	}
 	switch (finishedWork.tag) {
@@ -81,7 +106,7 @@ function commitUpdate(finishedWork: FiberNode) {
 }
 
 function commitDeletion(childToDelete: FiberNode) {
-	if(__DEV__) {
+	if(__LOG__) {
 		console.log('删除DOM,组件unmount', childToDelete)
 	}
 	let firstHostFiber: FiberNode
@@ -104,7 +129,7 @@ function commitDeletion(childToDelete: FiberNode) {
 				return		
 		}
 	})
-
+	// @ts-ignore
 	if(firstHostFiber) {
 		const hostParent = getHostParent(childToDelete) as Container
 		removeChild(firstHostFiber.stateNode, hostParent)
@@ -147,19 +172,27 @@ function commitNestedUnmounts(
 	}
 }
 
-function appendPlacementNodeIntoContainer(fiber: FiberNode, parent: Container) {
+function insertOrAppendPlacementNodeIntoContainer(
+	fiber: FiberNode, 
+	parent: Container,
+	before?: Instance
+) {
 	if (fiber.tag === HostComponent || fiber.tag === HostText) {
-		appendChildToContainer(fiber.stateNode, parent);
+		if(before) {
+			insertChildToContainer(fiber.stateNode, parent, before)
+		} else {
+			appendChildToContainer(fiber.stateNode, parent);
+		}
 		return;
 	}
 
 	const child = fiber.child;
 	if (child !== null) {
-		appendPlacementNodeIntoContainer(child, parent);
+		insertOrAppendPlacementNodeIntoContainer(child, parent, before);
 		let sibling = child.sibling;
 
 		while (sibling !== null) {
-			appendPlacementNodeIntoContainer(sibling, parent);
+			insertOrAppendPlacementNodeIntoContainer(sibling, parent, before);
 			sibling = sibling.sibling;
 		}
 	}
@@ -180,4 +213,57 @@ function getHostParent(fiber: FiberNode) {
 	}
 
 	console.error('getHostParent未找到hostParent');
+}
+
+/**
+ * 难点在于目标fiber的hostSibling可能不是他的同级sibling
+ * 比如：<A /> <B />
+ * 其中function B(){return <div />}
+ * 所以A的hostSibling实际是B的child,实际情况层级可能更深
+ * 同时：一个fiber被标记Placement, 那它就是不稳定的，
+ * 它对应的DOM在本次commit阶段会移动，也不能作为hostSibling
+ */
+function getHostSibling(fiber: FiberNode) {
+	let node: FiberNode = fiber
+	findSibling: while(true) {
+		while(node.sibling === null) {
+			// 当前节点没有sibling，则找它父级的sibling
+			const parent = node.return
+			if(
+				parent === null ||
+				parent.tag === HostComponent ||
+				parent.tag === HostRoot
+			) {
+				// 没有找到
+				return null
+			}
+			node = parent
+		}
+		node.sibling.return = node.return
+		// 向同级sibling寻找
+		node = node.sibling
+
+		while(node.tag !== HostText && node.tag !== HostComponent) {
+			// 找到一个非Host Fiber，向下找，直到找到第一个host子孙
+			if(
+				(node.flags & Placement) !== NoFlags
+			) {
+				// 这个fiber不稳定 不能用
+				continue findSibling
+			}
+			if(node.child === null) {
+				continue findSibling
+			} else {
+				node.child.return = node
+				node = node.child
+			}
+		}
+		// 找到最有可能的fiber
+		if(
+			(node.flags & Placement) !== NoFlags
+		) {
+			// 这是最稳定的fiber 就它了
+			return node.stateNode
+		}
+	}
 }

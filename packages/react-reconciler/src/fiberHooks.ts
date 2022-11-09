@@ -67,16 +67,14 @@ function mountState<State>(
     }
     const queue = createUpdateQueue<State>()
     hook.updateQueue = queue
+    // @ts-ignore
+    const dispatch = (queue.dispatch = dispatchSetState.bind(
+        null, 
+        currentlyRenderingFiber,
+        queue
+    ))
 
-    return [
-        memoizedState,
-        // @ts-ignore
-        dispatchSetState.bind(
-            null,
-            currentlyRenderingFiber,
-            queue
-        )
-    ]
+    return [memoizedState, dispatch]
 }
 
 function updateState<State>():[State, Dispatch<State>] {

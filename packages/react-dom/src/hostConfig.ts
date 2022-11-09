@@ -1,13 +1,13 @@
-import { updateEventProps } from "./SyntheticEvent";
+import { updateFiberProps } from "./SyntheticEvent";
 
 export type Container = Element | Document;
 export type Instance = Element;
 
 export type TextInstance = Text
 
-export const createInstance = (type: string, props: any) => {
+export const createInstance = (type: string, props: any): Instance => {
 	const element = document.createElement(type);
-	return updateEventProps(element, props)
+	return updateFiberProps(element, props)
 };
 
 export const createTextInstance = (content: string) => {
@@ -24,6 +24,14 @@ export const appendChildToContainer = (
 ) => {
 	container.appendChild(child);
 };
+
+export const insertChildToContainer = (
+	child:Instance,
+	container: Container,
+	before: Instance
+) => {
+	container.insertBefore(before, child)
+}
 
 export const removeChild = (
 	child:Instance,

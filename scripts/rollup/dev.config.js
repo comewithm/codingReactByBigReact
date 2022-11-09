@@ -12,13 +12,15 @@ const basePlugins = [
     typescript(tsConfig),
     resolve(),
     replace({
-        __DEV__: process.env.NODE_ENV !== 'production'
+        __LOG__: false,
+        preventAssignment: true
     })
 ]
 
+const pkgPath = path.resolve(__dirname, '../../packages')
+const distPath = path.resolve(__dirname, '../../dist/node_modules')
+
 function resolvePkgPath(pkgName, isDist) {
-    const pkgPath = path.resolve(__dirname, '../../packages')
-    const distPath = path.resolve(__dirname, '../../dist/node_modules')
     if(isDist) {
         return `${distPath}/${pkgName}`
     }
