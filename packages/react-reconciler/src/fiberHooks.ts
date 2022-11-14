@@ -62,9 +62,6 @@ function mountState<State>(
     }
     hook.memoizedState = memoizedState
 
-    if(currentlyRenderingFiber === null) {
-        console.error('mountState时currentlyRenderingFiber不存在')
-    }
     const queue = createUpdateQueue<State>()
     hook.updateQueue = queue
     // @ts-ignore
