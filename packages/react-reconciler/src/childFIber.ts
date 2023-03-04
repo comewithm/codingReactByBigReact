@@ -190,12 +190,12 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 		returnFiber: FiberNode,
 		existingChildren: ExistingChildren,
 		index: number,
-		element: ReactElement | string
+		element: ReactElement | string | number
 	) {
 		// existingChildren: current<Map>
 		// element: one of the newChild<any[]>
 		let keyToUse
-		if(typeof element === 'string') {
+		if(typeof element === 'string' || typeof element === 'number') {
 			keyToUse = index
 		} else {
 			keyToUse = element.key !== null ? element.key : index
@@ -203,13 +203,13 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 		// current before
 		const before = existingChildren.get(keyToUse)
 
-		if(typeof element === 'string') {
+		if(typeof element === 'string'  || typeof element === 'number') {
 			if(before) {
 				// fiber key 相同 如果type也相同，则可以复用
 				existingChildren.delete(keyToUse)
 				if(before.tag === HostText) {
 					// 复用文本节点
-					return useFiber(before, {content: element})
+					return useFiber(before, {content: element + ''})
 				} else {
 					deleteChild(returnFiber, before)
 				}

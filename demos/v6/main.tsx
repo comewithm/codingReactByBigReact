@@ -10,20 +10,25 @@ function Child({num}:{num:number}) {
 
 function App() {
 
-    const [num, setNum] = useState(0)
+    const [num, updateNum] = useState(0)
 
     const isOdd = num % 2
 
     const randomNum = () => {
-        setNum(num + 1)
+        updateNum(num + 1)
     }
 
     return (
-        <h3
-            onClick={randomNum}
-        >
-            {num % 2 ? <Child num={num} /> : <p>click!!!</p>}
-        </h3>
+        <div>
+            <h3
+                onClick={(e) => {
+                    updateNum(Math.ceil(Math.random() * 1000))
+                }}
+            >
+                {isOdd ? <Child num={num} /> : <p>click!!!</p>}
+            </h3>
+            <p>brother text</p>
+        </div>
     )
 }
 
