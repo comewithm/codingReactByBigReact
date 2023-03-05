@@ -3,7 +3,8 @@ import { Action } from "shared/ReactTypes"
 export type Dispatch<State> = (action: Action<State>) => void
 
 export type Dispatcher = {
-    useState: <T>(initialState:(() => T | T)) => [T, Dispatch<T>]
+    useState: <T>(initialState:(() => T | T)) => [T, Dispatch<T>],
+    useEffect: (callback: (() => void) | void, deps: any[] | void) => void
 }
 
 const currentDispatcher: {current: Dispatcher | null} = {

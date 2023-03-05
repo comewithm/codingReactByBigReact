@@ -4,8 +4,9 @@
 	"description": "",
 	"main": "index.js",
 	"dependencies": {
-		"shared": "workspace:*",
+		"react": "workspace:*",
 		"react-dom": "workspace:*",
-		"react": "workspace:*"
+		"scheduler": "^0.23.0",
+		"shared": "^0.0.0"
 	}
 }

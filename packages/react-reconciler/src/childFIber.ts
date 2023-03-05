@@ -151,6 +151,9 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 				i,
 				after
 			) as FiberNode
+			if(newFiber === null) {
+				continue
+			}
 			newFiber.index = i
 			newFiber.return = returnFiber
 			
@@ -193,12 +196,16 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 		returnFiber: FiberNode,
 		existingChildren: ExistingChildren,
 		index: number,
-		element: ReactElement | string | number
+		element: ReactElement | string | number | null
 	) {
 		// existingChildren: current<Map>
 		// element: one of the newChild<any[]>
 		let keyToUse
-		if(typeof element === 'string' || typeof element === 'number') {
+		if(
+			element === null ||
+			typeof element === 'string' || 
+			typeof element === 'number'
+		) {
 			keyToUse = index
 		} else {
 			keyToUse = element.key !== null ? element.key : index
@@ -206,7 +213,11 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 		// current before
 		const before = existingChildren.get(keyToUse)
 
-		if(typeof element === 'string'  || typeof element === 'number') {
+		if(
+			element === null ||
+			typeof element === 'string'  || 
+			typeof element === 'number'
+		) {
 			if(before) {
 				// fiber key 相同 如果type也相同，则可以复用
 				existingChildren.delete(keyToUse)
@@ -218,7 +229,9 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 				}
 			} 
 			// 新建文本节点
-			return new FiberNode(HostText, {content:element}, null)
+			return element === null 
+				? null
+				: new FiberNode(HostText, {content:element}, null)
 		}
 
 		if(typeof element === 'object' && element !== null) {
@@ -238,7 +251,6 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 					return createFiberFromElement(element)
 			}
 		}
-		console.error('updateFromMap未处理的情况', before, element)
 		return null
 	}
 
@@ -274,7 +286,7 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 				)
 			)
 		}
-		console.error('reconcile时未实现的child类型', newChild, currentFirstChild);
+		console.warn('reconcile时未实现的child类型', newChild, currentFirstChild);
 		return null;
 	}
 

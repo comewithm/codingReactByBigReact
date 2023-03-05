@@ -5,6 +5,8 @@ import { createUpdate, createUpdateQueue, enqueueUpdate, processUpdateQueue, Upd
 import { Action } from "shared/ReactTypes";
 import { scheduleUpdateOnFiber } from "./workLoop";
 import { Lane, NoLane, requestUpdateLane } from "./fiberLanes";
+import { Flags, PassiveEffect } from "./fiberFlags";
+import { HookHasEffect, Passive } from "./hookEffectTags";
 
 interface Hook {
     memoizedState: any
@@ -47,11 +49,13 @@ export const renderWithHooks = (workInProgress: FiberNode, lane: Lane) => {
 }
 
 const HooksDispatcherOnMount:Dispatcher = {
-    useState: mountState
+    useState: mountState,
+    useEffect: mountEffect
 }
 
 const HookDispatcherOnUpdate: Dispatcher = {
-    useState: updateState
+    useState: updateState,
+    useEffect: updateEffect
 }
 
 function mountState<State>(
@@ -183,4 +187,143 @@ function updateWorkInProgressHook(): Hook {
     }
 
     return workInProgressHook as Hook
+}
+
+
+type TEffectCallback = () => void
+type TEffectDeps = any[] | null
+
+export interface Effect {
+    tag: Flags,
+    create: TEffectCallback | void,
+    destroy: TEffectCallback | void,
+    deps: TEffectDeps,
+    // 环状链表
+    next: Effect | null
+}
+
+export interface FCUpdateQueue<State> extends UpdateQueue<State> {
+    lastEffect: Effect | null
+}
+
+function mountEffect(
+    create: TEffectCallback | void,
+    deps: TEffectDeps | void
+) {
+    const hook = mountWorkInProgressHook()
+    const nextDeps = deps === undefined ? null : deps;
+    /*
+        注意区分PassiveEffect与Passive, PassiveEffect是针对fiber.flags
+        Passive是effect类型，代表useEffect。
+        Layout代表useLayoutEffect。
+    */
+   (currentlyRenderingFiber as FiberNode).flags |= PassiveEffect
+
+   hook.memoizedState = pushEffect(
+        Passive | HookHasEffect,
+        create,
+        undefined,
+        nextDeps
+   )
+}
+
+function updateEffect(
+    create: TEffectCallback | void,
+    deps: TEffectDeps | void
+) {
+    const hook = updateWorkInProgressHook()
+    const nextDeps = deps === undefined ? null : deps;
+    let destroy: TEffectCallback | void
+
+    if(currentHook !== null) {
+        const prevEffect = currentHook.memoizedState as Effect;
+        destroy = prevEffect.destroy
+
+        if(nextDeps !== null) {
+            // 浅比较依赖
+            const prevDeps = prevEffect.deps
+            if(areHookInputsEqual(prevDeps, nextDeps)) {
+                hook.memoizedState = pushEffect(
+                    Passive,
+                    create,
+                    destroy,
+                    nextDeps
+                )
+                return
+            }
+        }
+    }
+
+    // 接下来才是有副作用
+    (currentlyRenderingFiber as FiberNode).flags |= PassiveEffect
+
+    hook.memoizedState = pushEffect(
+        Passive | HookHasEffect,
+        create,
+        destroy,
+        nextDeps
+    )
+}
+
+
+function pushEffect(
+    hookFlags: Flags,
+    create: TEffectCallback | void,
+    destroy: TEffectCallback | void,
+    deps: TEffectDeps
+) {
+    const effect: Effect = {
+        tag: hookFlags,
+        create,
+        destroy,
+        deps,
+        next: null
+    }
+
+    const fiber = currentlyRenderingFiber as FiberNode
+
+    const updateQueue = fiber.updateQueue as FCUpdateQueue<any>
+    if(updateQueue === null) {
+        const updateQueue = createFCUpdateQueue()
+        fiber.updateQueue = updateQueue
+        // 与自己形成环
+        updateQueue.lastEffect = effect.next = effect
+    } else {
+        // append操作
+        const lastEffect = updateQueue.lastEffect
+        if(lastEffect === null) {
+            updateQueue.lastEffect = effect.next = effect
+        } else {
+            const firstEffect = lastEffect.next
+            lastEffect.next = effect
+            effect.next = firstEffect
+
+            updateQueue.lastEffect = effect
+        }
+    }
+    return effect
+}
+
+
+function areHookInputsEqual(
+    nextDeps: TEffectDeps,
+    prevDeps: TEffectDeps
+) {
+    if(prevDeps === null || nextDeps === null) {
+        return false
+    }
+
+    for(let i = 0; i < prevDeps.length && i < nextDeps.length; i++) {
+        if(Object.is(prevDeps[i], nextDeps[i])) {
+            continue
+        }
+        return false
+    }
+    return true
+}
+
+function createFCUpdateQueue<State>() {
+    const updateQueue = createUpdateQueue<State>() as FCUpdateQueue<State>
+    updateQueue.lastEffect = null
+    return updateQueue
 }
