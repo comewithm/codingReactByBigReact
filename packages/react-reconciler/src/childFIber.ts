@@ -49,7 +49,7 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 		const key = element.key
 		let current = currentFirstChild
 
-		if(current !== null) {
+		while(current !== null) {
 			if(current.key === key) {
 				// key相同 比较type
 				if(element.$$typeof === REACT_ELEMENT_TYPE) {
@@ -62,12 +62,15 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 							returnFiber,
 							current.sibling
 						)
+						return existing
 					}
 					// key相同但是type不同 不能复用，后面的兄弟节点也没有复用的可能性了，都删除
 					deleteRemainingChildren(returnFiber, current)
+					break
 				} else {
 					// $$typeof不是react.element类型的
 					console.error('未定义的element.$$typeof', element.$$typeof)
+					break
 				}
 			} else {
 				// key值不同,删除旧的

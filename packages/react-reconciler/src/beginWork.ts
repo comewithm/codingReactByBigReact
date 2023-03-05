@@ -2,7 +2,7 @@ import { ReactElement } from 'shared/ReactTypes';
 import { mountChildFibers, reconcileChildFibers } from './childFiber';
 import { FiberNode } from './fiber';
 import { renderWithHooks } from './fiberHooks';
-import { Lane } from './fiberLanes';
+import { Lane, NoLane } from './fiberLanes';
 import { processUpdateQueue, UpdateQueue } from './updateQueue';
 import { FunctionComponent, HostComponent, HostRoot, HostText } from './workTags';
 
@@ -11,6 +11,7 @@ export const beginWork = (workInProgress: FiberNode, renderLane: Lane) => {
 		console.log('beginWork流程', workInProgress.type)
 	}
 	// 接下来processUpdate会消耗lanes
+	workInProgress.lanes = NoLane
 	switch (workInProgress.tag) {
 		case HostRoot:
 			return updateHostRoot(workInProgress, renderLane);
