@@ -17,6 +17,9 @@ importers:
       '@rollup/plugin-commonjs':
         specifier: ^25.0.4
         version: registry.npmmirror.com/@rollup/plugin-commonjs@25.0.4(rollup@3.28.0)
+      '@rollup/plugin-replace':
+        specifier: ^5.0.2
+        version: registry.npmmirror.com/@rollup/plugin-replace@5.0.2(rollup@3.28.0)
       '@typescript-eslint/eslint-plugin':
         specifier: ^6.4.0
         version: registry.npmmirror.com/@typescript-eslint/eslint-plugin@6.4.0(@typescript-eslint/parser@6.4.0)(eslint@8.47.0)(typescript@5.1.6)
@@ -61,6 +64,12 @@ importers:
         version: registry.npmmirror.com/typescript@5.1.6
 
   packages/react:
+    devDependencies:
+      shared:
+        specifier: workspace:^
+        version: link:../shared
+
+  packages/react-reconciler:
     devDependencies:
       shared:
         specifier: workspace:^
@@ -513,6 +522,23 @@ packages:
       estree-walker: registry.npmmirror.com/estree-walker@2.0.2
       glob: registry.npmmirror.com/glob@8.1.0
       is-reference: registry.npmmirror.com/is-reference@1.2.1
+      magic-string: registry.npmmirror.com/magic-string@0.27.0
+      rollup: registry.npmmirror.com/rollup@3.28.0
+    dev: true
+
+  registry.npmmirror.com/@rollup/plugin-replace@5.0.2(rollup@3.28.0):
+    resolution: {integrity: sha512-M9YXNekv/C/iHHK+cvORzfRYfPbq0RDD8r0G+bMiTXjNGKulPnCT9O3Ss46WfhI6ZOCgApOP7xAdmCQJ+U2LAA==, registry: http://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@rollup/plugin-replace/-/plugin-replace-5.0.2.tgz}
+    id: registry.npmmirror.com/@rollup/plugin-replace/5.0.2
+    name: '@rollup/plugin-replace'
+    version: 5.0.2
+    engines: {node: '>=14.0.0'}
+    peerDependencies:
+      rollup: ^1.20.0||^2.0.0||^3.0.0
+    peerDependenciesMeta:
+      rollup:
+        optional: true
+    dependencies:
+      '@rollup/pluginutils': registry.npmmirror.com/@rollup/pluginutils@5.0.3(rollup@3.28.0)
       magic-string: registry.npmmirror.com/magic-string@0.27.0
       rollup: registry.npmmirror.com/rollup@3.28.0
     dev: true
