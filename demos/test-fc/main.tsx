@@ -1,10 +1,10 @@
 import {useState} from 'react'
-import ReactDOM from 'react-dom/client'
+import ReactDOM from 'react-dom'
 
 function App() {
     const [num, setNum] = useState(20)
     return (
-        <div>
+        <div onClick={() => setNum(num + 1)}>
             {num}
         </div>
     )
