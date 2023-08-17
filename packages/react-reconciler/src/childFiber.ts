@@ -8,6 +8,8 @@ import { REACT_ELEMENT_TYPE } from 'shared/ReactSymbols';
 import { Placement } from './fiberFlags';
 import { HostText } from './workTags';
 
+type ExistingChildren = Map<string | number, FiberNode>;
+
 function ChildReconciler(shouldTrackEffects: boolean) {
 	function placeSingleChild(fiber: FiberNode) {
 		if (shouldTrackEffects && fiber.alternate === null) {
@@ -28,13 +30,27 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 		}
 	}
 
+	function deleteRemainingChildren(
+		returnFiber: FiberNode,
+		currentFirstChild: FiberNode | null
+	) {
+		if (!shouldTrackEffects) {
+			return;
+		}
+		let childToDelete = currentFirstChild;
+		while (childToDelete !== null) {
+			deleteChild(returnFiber, childToDelete);
+			childToDelete = childToDelete.sibling;
+		}
+	}
+
 	function reconcileSingleElement(
 		returnFiber: FiberNode,
 		currentFiber: FiberNode | null,
 		element: ReactElementType
 	) {
 		const key = element.key;
-		work: if (currentFiber !== null) {
+		while (currentFiber !== null) {
 			// update
 			if (currentFiber.key === key) {
 				// key相同
@@ -43,21 +59,24 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 						// type相同
 						const existing = useFiber(currentFiber, element.props);
 						existing.return = returnFiber;
+						// 当前节点可复用，标记剩下的节点删除
+						deleteRemainingChildren(returnFiber, currentFiber.sibling);
 						return existing;
 					}
 					// type不同，删除currentFiber,根据element创建新fiber
-					deleteChild(returnFiber, currentFiber);
-					break work;
+					deleteRemainingChildren(returnFiber, currentFiber);
+					break;
 				} else {
 					// 类型不同
 					if (__DEV__) {
 						console.warn('未实现的react类型', element);
-						break work;
+						break;
 					}
 				}
 			} else {
 				// 删除currentFiber,根据element创建新fiber
 				deleteChild(returnFiber, currentFiber);
+				currentFiber = currentFiber.sibling;
 			}
 		}
 
@@ -72,21 +91,96 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 		currentFiber: FiberNode | null,
 		content: string | number
 	) {
-		if (currentFiber !== null) {
+		while (currentFiber !== null) {
 			// update
 			if (currentFiber.tag === HostText) {
 				// type相同，可以复用
 				const existing = useFiber(currentFiber, { content });
 				existing.return = returnFiber;
+				deleteRemainingChildren(returnFiber, currentFiber.sibling);
 				return existing;
 			}
 			// type不同，删除, 根据新content创建新fiber
 			deleteChild(returnFiber, currentFiber);
+			currentFiber = currentFiber.sibling;
 		}
 
 		const fiber = new FiberNode(HostText, { content }, null);
 		fiber.return = returnFiber;
 		return fiber;
+	}
+
+	function reconcileChildrenArray(
+		returnFiber: FiberNode,
+		currentFirstChild: FiberNode | null,
+		newChid: any[]
+	) {
+		let lastPlacedIndex: number = 0;
+		// 创建的最后一个fiber
+		let lastNewFiber: FiberNode | null = null;
+		// 创建的第一个fiber
+		let firstNewFiber: FiberNode | null = null;
+
+		// 1.将current保存在map中
+		const existingChildren: ExistingChildren = new Map();
+		let current = currentFirstChild;
+
+		while (current !== null) {
+			const keyToUse = current.key !== null ? current.key : current.index;
+			existingChildren.set(keyToUse, current);
+			current = current.sibling;
+		}
+
+		// 2.遍历newChild，寻找是否可复用
+		for (let i = 0; i < newChid.length; i++) {
+			const after = newChid[i];
+			const newFiber = updateFromMap(returnFiber, existingChildren, i, after);
+
+			if (newFiber === null) {
+				continue;
+			}
+
+			// 3.标记移动还是插入
+			newFiber.index = i;
+			newFiber.return = returnFiber;
+
+			if (lastNewFiber === null) {
+				// 开始都指向链表头
+				lastNewFiber = newFiber;
+				firstNewFiber = newFiber;
+			} else {
+				// 后续 头指针firstNewFiber不动, lastNewFiber移动指向newFiber形成链表
+				lastNewFiber.sibling = newFiber;
+				lastNewFiber = lastNewFiber.sibling;
+			}
+
+			if (!shouldTrackEffects) {
+				continue;
+			}
+
+			const current = newFiber.alternate;
+			if (current !== null) {
+				// 不为空，说明是复用得到的old fiber,获取old fiber的索引
+				const oldIndex = current.index;
+				if (oldIndex < lastPlacedIndex) {
+					// 移动
+					newFiber.flags |= Placement;
+					continue;
+				} else {
+					// 不移动
+					lastPlacedIndex = oldIndex;
+				}
+			} else {
+				// newFiber不是复用得到，新创建的 mount
+				newFiber.flags |= Placement;
+			}
+		}
+		// 4.将Map中剩下的标记为删除
+		existingChildren.forEach((fiber) => {
+			deleteChild(returnFiber, fiber);
+		});
+		// firstNewFiber和lastNewFiber形成一个链表
+		return firstNewFiber;
 	}
 
 	return function reconcileChildFibers(
@@ -107,9 +201,13 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 					}
 					break;
 			}
+
+			// 多节点情况 ul > li*3
+			if (Array.isArray(newChild)) {
+				return reconcileChildrenArray(returnFiber, currentFiber, newChild);
+			}
 		}
 
-		// 多节点情况 ul > li*3
 		if (typeof newChild === 'string' || typeof newChild === 'number') {
 			return placeSingleChild(
 				reconcileSingleTextNode(returnFiber, currentFiber, newChild)
@@ -126,6 +224,50 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 		}
 		return null;
 	};
+}
+
+function updateFromMap(
+	returnFiber: FiberNode,
+	existingChildren: ExistingChildren,
+	index: number,
+	element: any
+): FiberNode | null {
+	const keyToUse = element.key !== null ? element.key : index;
+	const before = existingChildren.get(keyToUse);
+
+	// HostText
+	if (typeof element === 'string' || typeof element === 'number') {
+		if (before) {
+			if (before.tag === HostText) {
+				// 能复用，删除Map中复用节点
+				existingChildren.delete(keyToUse);
+				return useFiber(before, { content: element + '' });
+			}
+		}
+		// old不存在，创建新的文本节点
+		return new FiberNode(HostText, { content: element + '' }, null);
+	}
+
+	// ReactElement
+	if (typeof element === 'object' && element !== null) {
+		switch (element.$$typeof) {
+			case REACT_ELEMENT_TYPE:
+				if (before) {
+					if (before.type === element.type) {
+						existingChildren.delete(keyToUse);
+						return useFiber(before, element.props);
+					}
+				}
+				return createFiberFromElement(element);
+		}
+
+		// TODO 数组类型
+		if (Array.isArray(element) && __DEV__) {
+			console.warn('还未实现数组类型的child');
+		}
+	}
+
+	return null;
 }
 
 function useFiber(fiber: FiberNode, pendingProps: Props): FiberNode {
