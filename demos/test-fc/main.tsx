@@ -1,4 +1,4 @@
-import {useState} from 'react'
+import {useState, useEffect} from 'react'
 import ReactDOM from 'react-dom'
 
 function App() {
@@ -7,6 +7,17 @@ function App() {
     const array = num % 2 === 0
         ? [<li key="1">1</li>, <li key="2">2</li>, <li key="3">3</li>]
         : [<li key="3">3</li>, <li key="2">2</li>, <li key="1">1</li>]
+
+    useEffect(() => {
+        console.log('App mount');
+    }, []);
+
+    useEffect(() => {
+        console.log('num change create', num);
+        return () => {
+            console.log('num change destroy', num);
+        };
+    }, [num]);
     return (
         <ul onClickCapture={() => {
             setNum(num + 1)
