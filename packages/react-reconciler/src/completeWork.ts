@@ -1,5 +1,6 @@
 import {
 	Container,
+	Instance,
 	appendInitialChild,
 	createInstance,
 	createTextInstance
@@ -13,7 +14,6 @@ import {
 	HostRoot,
 	HostText
 } from './workTags';
-import { updateFiberProps } from 'react-dom/src/SyntheticEvent';
 
 export const completeWork = (wip: FiberNode) => {
 	// 递归中的归
@@ -26,7 +26,8 @@ export const completeWork = (wip: FiberNode) => {
 				// update
 				// 1. props是否变化
 				// 2.变了 Update flag
-				updateFiberProps(wip.stateNode, newProps);
+				// updateFiberProps(wip.stateNode, newProps);
+				markUpdate(wip);
 			} else {
 				// 1. 构建DOM
 				const instance = createInstance(wip.type, newProps);
@@ -70,7 +71,7 @@ function markUpdate(fiber: FiberNode) {
 	fiber.flags |= Update;
 }
 
-function appendAllChildren(parent: Container, wip: FiberNode) {
+function appendAllChildren(parent: Container | Instance, wip: FiberNode) {
 	let node = wip.child;
 	while (node !== null) {
 		if (node.tag === HostComponent || node.tag === HostText) {

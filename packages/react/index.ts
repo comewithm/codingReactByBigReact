@@ -2,7 +2,12 @@ import currentDispatcher, {
 	Dispatcher,
 	resolveDispatcher
 } from './src/currentDispatcher';
-import { jsxDEV, jsx, isValidElement as isValidElementFn } from './src/jsx';
+import {
+	createElement as createElementFn,
+	isValidElement as isValidElementFn
+} from './src/jsx';
+
+export { REACT_FRAGMENT_TYPE as Fragment } from 'shared/ReactSymbols';
 
 export const useState: Dispatcher['useState'] = (initialState) => {
 	const dispatcher = resolveDispatcher();
@@ -22,5 +27,5 @@ export const __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
 export const version = '0.0.0';
 
 // TODO:根据环境区分jsx/jsxDEV
-export const createElement = jsx;
+export const createElement = createElementFn;
 export const isValidElement = isValidElementFn;

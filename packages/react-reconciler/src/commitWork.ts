@@ -2,7 +2,7 @@ import {
 	Container,
 	Instance,
 	appendChildToContainer,
-	commitTextUpdate,
+	commitUpdate,
 	insertChildToContainer,
 	removeChild
 } from 'hostConfig';
@@ -25,6 +25,7 @@ import {
 } from './workTags';
 import { Effect, FCUpdateQueue } from './fiberHook';
 import { HookHasEffect } from './hookEffectTags';
+import { updateFiberProps } from 'react-dom/src/SyntheticEvent';
 
 let nextEffect: FiberNode | null = null;
 
@@ -169,19 +170,6 @@ const commitPlacement = (finishedWork: FiberNode) => {
 		insertOrAppendPlacementNodeIntoContainer(finishedWork, hostParent, sibling);
 	}
 };
-
-function commitUpdate(fiber: FiberNode) {
-	switch (fiber.tag) {
-		case HostText:
-			const text = fiber.memoizedProps.content;
-			return commitTextUpdate(fiber.stateNode, text);
-		default:
-			if (__DEV__) {
-				console.warn('未实现的Update类型', fiber);
-			}
-			break;
-	}
-}
 
 function commitDeletion(childToDelete: FiberNode, root: FiberRootNode) {
 	const rootChildrenToDelete: FiberNode[] = [];
