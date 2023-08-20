@@ -8,12 +8,14 @@ import {
 import { FiberNode } from './fiber';
 import { NoFlags, Ref, Update } from './fiberFlags';
 import {
+	ContextProvider,
 	Fragment,
 	FunctionComponent,
 	HostComponent,
 	HostRoot,
 	HostText
 } from './workTags';
+import { popProvider } from './fiberContext';
 
 export const completeWork = (wip: FiberNode) => {
 	// 递归中的归
@@ -65,6 +67,11 @@ export const completeWork = (wip: FiberNode) => {
 			return null;
 		case FunctionComponent:
 		case Fragment:
+			bubbleProperties(wip);
+			return null;
+		case ContextProvider:
+			const context = wip.type._context;
+			popProvider(context);
 			bubbleProperties(wip);
 			return null;
 		default:

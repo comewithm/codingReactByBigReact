@@ -8,7 +8,7 @@ import {
 	enqueueUpdate,
 	processUpdateQueue
 } from './updateQueue';
-import { Action } from 'shared/ReactTypes';
+import { Action, ReactContext } from 'shared/ReactTypes';
 import { scheduleUpdateOnFiber } from './workLoop';
 import internals from 'shared/internals';
 import { Lane, NoLane, requestUpdateLane } from './fiberLanes';
@@ -81,14 +81,16 @@ const HookDispatcherOnMount: Dispatcher = {
 	useState: mountState,
 	useEffect: mountEffect,
 	useTransition: mountTransition,
-	useRef: mountRef
+	useRef: mountRef,
+	useContext: readContext
 };
 
 const HookDispatcherOnUpdate: Dispatcher = {
 	useState: updateState,
 	useEffect: updateEffect,
 	useTransition: updateTransition,
-	useRef: updateRef
+	useRef: updateRef,
+	useContext: readContext
 };
 
 function mountState<State>(
@@ -287,6 +289,17 @@ function mountRef<T>(initialValue: T): { current: T } {
 function updateRef<T>(initialValue: T): { current: T } {
 	const hook = updateWorkInProgressHook();
 	return hook.memoizedState;
+}
+
+function readContext<T>(context: ReactContext<T>): T {
+	const consumer = currentlyRenderingFiber;
+
+	if (consumer === null) {
+		throw new Error('只能在函数组件中调用useContext');
+	}
+	const value = context._currentValue;
+
+	return value;
 }
 
 function createFCUpdateQueue<State>() {

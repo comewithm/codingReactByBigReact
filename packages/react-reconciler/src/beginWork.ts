@@ -2,6 +2,7 @@ import { ReactElementType } from 'shared/ReactTypes';
 import { FiberNode } from './fiber';
 import { UpdateQueue, processUpdateQueue } from './updateQueue';
 import {
+	ContextProvider,
 	Fragment,
 	FunctionComponent,
 	HostComponent,
@@ -11,6 +12,7 @@ import {
 import { mountChildFibers, reconcileChildFibers } from './childFiber';
 import { renderWithHooks } from './fiberHook';
 import { Lane } from './fiberLanes';
+import { pushProvider } from './fiberContext';
 
 export const beginWork = (wip: FiberNode, renderLane: Lane) => {
 	switch (wip.tag) {
@@ -24,6 +26,8 @@ export const beginWork = (wip: FiberNode, renderLane: Lane) => {
 			return updateFunctionComponent(wip, renderLane);
 		case Fragment:
 			return updateFragment(wip);
+		case ContextProvider:
+			return updateContextProvider(wip);
 		default:
 			if (__DEV__) {
 				console.warn('beginWork未实现的类型');
@@ -62,6 +66,19 @@ function updateFunctionComponent(wip: FiberNode, renderLane: Lane) {
 
 function updateFragment(wip: FiberNode) {
 	const nextChildren = wip.pendingProps;
+	reconcileChildren(wip, nextChildren);
+	return wip.child;
+}
+
+function updateContextProvider(wip: FiberNode) {
+	const providerType = wip.type;
+	const context = providerType._context;
+
+	const newProps = wip.pendingProps;
+
+	pushProvider(context, newProps.value);
+
+	const nextChildren = newProps.children;
 	reconcileChildren(wip, nextChildren);
 	return wip.child;
 }
