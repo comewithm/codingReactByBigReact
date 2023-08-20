@@ -80,13 +80,15 @@ export function renderWithHooks(wip: FiberNode, lane: Lane) {
 const HookDispatcherOnMount: Dispatcher = {
 	useState: mountState,
 	useEffect: mountEffect,
-	useTransition: mountTransition
+	useTransition: mountTransition,
+	useRef: mountRef
 };
 
 const HookDispatcherOnUpdate: Dispatcher = {
 	useState: updateState,
 	useEffect: updateEffect,
-	useTransition: updateTransition
+	useTransition: updateTransition,
+	useRef: updateRef
 };
 
 function mountState<State>(
@@ -272,6 +274,19 @@ function startTransition(setPending: Dispatch<boolean>, callback: () => void) {
 	setPending(false);
 
 	currentBatchConfig.transition = prevTransition;
+}
+
+function mountRef<T>(initialValue: T): { current: T } {
+	const hook = mountWorkInProgressHook();
+	const ref = { current: initialValue };
+	hook.memoizedState = ref;
+
+	return ref;
+}
+
+function updateRef<T>(initialValue: T): { current: T } {
+	const hook = updateWorkInProgressHook();
+	return hook.memoizedState;
 }
 
 function createFCUpdateQueue<State>() {

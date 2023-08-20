@@ -106,7 +106,7 @@ importers:
   packages/react:
     devDependencies:
       shared:
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../shared
 
   packages/react-dom:
@@ -136,7 +136,7 @@ importers:
   packages/react-reconciler:
     devDependencies:
       shared:
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../shared
 
   packages/shared: {}
