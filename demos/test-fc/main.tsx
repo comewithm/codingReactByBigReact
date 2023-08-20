@@ -29,14 +29,20 @@ function App() {
                 <li>5</li>
                 {array}
             </ul>
+
+            <ul onClick={() => setNum(50)}>
+                {new Array(num).fill(0).map((_, i) => {
+                    return <Child key={i}>{i}</Child>;
+                })}
+            </ul>
         </>
     )
 }
 
-function Child() {
-    return (
-        <span>big react</span>
-    )
+function Child({ children }) {
+	const now = performance.now();
+	while (performance.now() - now < 4) {}
+	return <li>{children}</li>;
 }
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement)

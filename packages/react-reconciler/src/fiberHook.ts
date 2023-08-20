@@ -1,6 +1,7 @@
 import { Dispatch, Dispatcher } from 'react/src/currentDispatcher';
 import { FiberNode } from './fiber';
 import {
+	Update,
 	UpdateQueue,
 	createUpdate,
 	createUpdateQueue,
@@ -18,6 +19,8 @@ interface Hook {
 	memoizedState: any;
 	updateQueue: unknown;
 	next: Hook | null;
+	baseState: any;
+	baseQueue: Update<any> | null;
 }
 
 let currentlyRenderingFiber: FiberNode | null = null;
@@ -113,15 +116,38 @@ function updateState<State>(): [State, Dispatch<State>] {
 
 	// 计算新state
 	const queue = hook.updateQueue as UpdateQueue<State>;
+	const baseState = hook.baseState;
+
 	const pending = queue.shared.pending;
+	const current = currentHook as Hook;
+	let baseQueue = current.baseQueue;
 
 	if (pending !== null) {
-		const { memoizedState } = processUpdateQueue(
-			hook.memoizedState,
-			pending,
-			renderLane
-		);
-		hook.memoizedState = memoizedState;
+		// pending baseQueue update保存在current中
+		if (baseQueue !== null) {
+			// baseQueue b2 -> b0 -> b1 -> b2
+			// pendingQueue p2 -> p0 -> p1 -> p2
+			const baseFirst = baseQueue.next;
+			const pendingFirst = pending.next;
+
+			baseQueue.next = pendingFirst;
+			pending.next = baseFirst;
+		}
+		baseQueue = pending;
+		// 保存在current中
+		current.baseQueue = pending;
+		queue.shared.pending = null;
+
+		if (baseQueue !== null) {
+			const {
+				memoizedState,
+				baseQueue: newBaseQueue,
+				baseState: newBaseState
+			} = processUpdateQueue(baseState, baseQueue, renderLane);
+			hook.memoizedState = memoizedState;
+			hook.baseState = newBaseState;
+			hook.baseQueue = newBaseQueue;
+		}
 	}
 
 	return [hook.memoizedState, queue.dispatch as Dispatch<State>];
@@ -247,7 +273,9 @@ function mountWorkInProgressHook() {
 	const hook: Hook = {
 		memoizedState: null,
 		updateQueue: null,
-		next: null
+		next: null,
+		baseQueue: null,
+		baseState: null
 	};
 
 	if (workInProgressHook === null) {
@@ -298,7 +326,9 @@ function updateWorkInProgressHook() {
 	const newHook: Hook = {
 		memoizedState: currentHook.memoizedState,
 		updateQueue: currentHook.updateQueue,
-		next: null
+		next: null,
+		baseQueue: currentHook.baseQueue,
+		baseState: currentHook.baseState
 	};
 
 	if (workInProgressHook === null) {
