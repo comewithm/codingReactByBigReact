@@ -8,12 +8,14 @@ import {
 	enqueueUpdate,
 	processUpdateQueue
 } from './updateQueue';
-import { Action, ReactContext } from 'shared/ReactTypes';
+import { Action, ReactContext, Thenable, Usable } from 'shared/ReactTypes';
 import { scheduleUpdateOnFiber } from './workLoop';
 import internals from 'shared/internals';
 import { Lane, NoLane, requestUpdateLane } from './fiberLanes';
 import { Flags, PassiveEffect } from './fiberFlags';
 import { HookHasEffect, Passive } from './hookEffectTags';
+import { REACT_CONTEXT_TYPE } from 'shared/ReactSymbols';
+import { trackUsedThenable } from './thenable';
 
 interface Hook {
 	memoizedState: any;
@@ -82,7 +84,8 @@ const HookDispatcherOnMount: Dispatcher = {
 	useEffect: mountEffect,
 	useTransition: mountTransition,
 	useRef: mountRef,
-	useContext: readContext
+	useContext: readContext,
+	use
 };
 
 const HookDispatcherOnUpdate: Dispatcher = {
@@ -90,7 +93,8 @@ const HookDispatcherOnUpdate: Dispatcher = {
 	useEffect: updateEffect,
 	useTransition: updateTransition,
 	useRef: updateRef,
-	useContext: readContext
+	useContext: readContext,
+	use
 };
 
 function mountState<State>(
@@ -302,6 +306,20 @@ function readContext<T>(context: ReactContext<T>): T {
 	return value;
 }
 
+function use<T>(usable: Usable<T>): T {
+	if (usable !== null && typeof usable === 'object') {
+		if (typeof (usable as Thenable<T>).then === 'function') {
+			const thenable = usable as Thenable<T>;
+			return trackUsedThenable(thenable);
+		} else if ((usable as ReactContext<T>).$$typeof === REACT_CONTEXT_TYPE) {
+			const context = usable as ReactContext<T>;
+			return readContext(context);
+		}
+	}
+
+	throw new Error('不支持的use参数' + usable);
+}
+
 function createFCUpdateQueue<State>() {
 	const updateQueue = createUpdateQueue<State>() as FCUpdateQueue<State>;
 	updateQueue.lastEffect = null;
@@ -365,9 +383,9 @@ function updateWorkInProgressHook() {
 
 	if (currentHook === null) {
 		// 这是FC update时的第一个hook
-		const current = currentlyRenderingFiber?.alternate;
+		const current = (currentlyRenderingFiber as FiberNode).alternate;
 		if (current !== null) {
-			nextCurrentHook = current?.memoizedState;
+			nextCurrentHook = current.memoizedState;
 		} else {
 			// mount
 			nextCurrentHook = null;
@@ -381,7 +399,7 @@ function updateWorkInProgressHook() {
 		// mount/ update u1 u2 u3
 		// update 		 u1 u2 u3 u4
 		throw new Error(
-			`组件${currentlyRenderingFiber?.type}本次执行时的hook比上次执行时多`
+			`组件${currentlyRenderingFiber?.type.name}本次执行时的hook比上次执行时多`
 		);
 	}
 
@@ -410,4 +428,10 @@ function updateWorkInProgressHook() {
 	}
 
 	return workInProgressHook;
+}
+
+export function resetHooksOnUnwind(wip: FiberNode) {
+	currentlyRenderingFiber = null;
+	currentHook = null;
+	workInProgressHook = null;
 }

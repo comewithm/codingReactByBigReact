@@ -1,6 +1,6 @@
 export type Type = any;
 export type Key = any;
-export type Ref = any;
+export type Ref = { current: any } | ((initialValue: any) => void);
 export type Props = any;
 export type ElementType = any;
 
@@ -9,7 +9,7 @@ export interface ReactElementType {
 	type: ElementType;
 	key: Key;
 	props: Props;
-	ref: Ref;
+	ref: Ref | null;
 	__mark: string;
 }
 
@@ -25,3 +25,45 @@ export type ReactProviderType<T> = {
 	$$typeof: symbol | number;
 	_context: ReactContext<T> | null;
 };
+
+export type Usable<T> = Thenable<T> | ReactContext<T>;
+
+export interface Weakable<Result = any> {
+	then(
+		onFulfill: () => Result,
+		onReject: () => Result
+	): void | Weakable<Result>;
+}
+
+interface ThenableImpl<T, Result, Err> {
+	then(
+		onFulfill: (value: T) => Result,
+		onReject: (error: Err) => Result
+	): void | Weakable<Result>;
+}
+
+interface UntrackedThenable<T, Result, Err>
+	extends ThenableImpl<T, Result, Err> {
+	status?: void;
+}
+
+export interface PendingThenable<T, Result, Err>
+	extends ThenableImpl<T, Result, Err> {
+	status: 'pending';
+}
+export interface FulfilledThenable<T, Result, Err>
+	extends ThenableImpl<T, Result, Err> {
+	status: 'fulfilled';
+	value: T;
+}
+export interface RejectedThenable<T, Result, Err>
+	extends ThenableImpl<T, Result, Err> {
+	status: 'rejected';
+	reason: Err;
+}
+
+export type Thenable<T, Result = void, Err = any> =
+	| UntrackedThenable<T, Result, Err>
+	| PendingThenable<T, Result, Err>
+	| FulfilledThenable<T, Result, Err>
+	| RejectedThenable<T, Result, Err>;

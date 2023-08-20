@@ -8,7 +8,10 @@ import {
 	isValidElement as isValidElementFn
 } from './src/jsx';
 
-export { REACT_FRAGMENT_TYPE as Fragment } from 'shared/ReactSymbols';
+export {
+	REACT_FRAGMENT_TYPE as Fragment,
+	REACT_SUSPENSE_TYPE as Suspense
+} from 'shared/ReactSymbols';
 
 export { createContext } from './src/context';
 
@@ -36,6 +39,11 @@ export const useRef: Dispatcher['useRef'] = (initialValue) => {
 export const useContext: Dispatcher['useContext'] = (context) => {
 	const dispatcher = resolveDispatcher() as Dispatcher;
 	return dispatcher.useContext(context);
+};
+
+export const use: Dispatcher['use'] = (usable) => {
+	const dispatcher = resolveDispatcher() as Dispatcher;
+	return dispatcher.use(usable);
 };
 
 export const __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {

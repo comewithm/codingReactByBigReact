@@ -6,6 +6,7 @@ import {
 	unstable_UserBlockingPriority,
 	unstable_getCurrentPriorityLevel
 } from 'scheduler';
+import { FiberRootNode } from './fiber';
 
 export type Lane = number;
 export type Lanes = number;
@@ -69,4 +70,36 @@ export function schedulerPriorityToLane(schedulerPriority: number): Lane {
 		return DefaultLane;
 	}
 	return NoLane;
+}
+
+export function getNextLane(root: FiberRootNode): Lane {
+	const pendingLanes = root.pendingLanes;
+
+	if (pendingLanes === NoLane) {
+		return NoLane;
+	}
+
+	let nextLane = NoLane;
+
+	// 排除挂起的lane
+	const suspendedLanes = pendingLanes & ~root.suspendedLanes;
+
+	if (suspendedLanes !== NoLanes) {
+		nextLane = getHighestPriorityLane(suspendedLanes);
+	} else {
+		const pingedLanes = pendingLanes & root.pingedLanes;
+		if (pingedLanes !== NoLanes) {
+			nextLane = getHighestPriorityLane(pingedLanes);
+		}
+	}
+	return nextLane;
+}
+
+export function markRootPinged(root: FiberRootNode, pingedLane: Lane) {
+	root.pingedLanes |= root.suspendedLanes & pingedLane;
+}
+
+export function markRootSuspended(root: FiberRootNode, suspendedLane: Lane) {
+	root.suspendedLanes |= suspendedLane;
+	root.pingedLanes &= ~suspendedLane;
 }
