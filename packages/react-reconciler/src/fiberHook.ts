@@ -127,11 +127,15 @@ function updateState<State>(): [State, Dispatch<State>] {
 		if (baseQueue !== null) {
 			// baseQueue b2 -> b0 -> b1 -> b2
 			// pendingQueue p2 -> p0 -> p1 -> p2
+			// b0
 			const baseFirst = baseQueue.next;
+			// p0
 			const pendingFirst = pending.next;
-
+			// b2 -> p0
 			baseQueue.next = pendingFirst;
+			// p2 -> b0
 			pending.next = baseFirst;
+			// p2 -> b0 -> b1 -> b2 -> p0 -> p1 -> p2
 		}
 		baseQueue = pending;
 		// 保存在current中

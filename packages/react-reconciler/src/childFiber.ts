@@ -247,13 +247,24 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 	};
 }
 
+function getElementKeyToUse(element: any, index?: number): Key {
+	if (
+		Array.isArray(element) ||
+		typeof element === 'string' ||
+		typeof element === 'number'
+	) {
+		return index;
+	}
+	return element.key !== null ? element.key : index;
+}
+
 function updateFromMap(
 	returnFiber: FiberNode,
 	existingChildren: ExistingChildren,
 	index: number,
 	element: any
 ): FiberNode | null {
-	const keyToUse = element.key !== null ? element.key : index;
+	const keyToUse = getElementKeyToUse(element, index);
 	const before = existingChildren.get(keyToUse);
 
 	// HostText
@@ -289,11 +300,6 @@ function updateFromMap(
 					}
 				}
 				return createFiberFromElement(element);
-		}
-
-		// TODO 数组类型
-		if (Array.isArray(element) && __DEV__) {
-			console.warn('还未实现数组类型的child');
 		}
 	}
 
