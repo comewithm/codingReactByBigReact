@@ -344,5 +344,25 @@ function useFiber(fiber: FiberNode, pendingProps: Props): FiberNode {
 	return clone;
 }
 
+export function cloneChildFiber(wip: FiberNode) {
+	// child sibling
+	if (wip.child === null) {
+		return;
+	}
+
+	let currentChild = wip.child;
+	let newChild = createWorkInProgress(currentChild, currentChild.pendingProps);
+
+	wip.child = newChild;
+	newChild.return = wip;
+
+	while (currentChild.sibling !== null) {
+		currentChild = currentChild.sibling;
+		newChild.sibling = createWorkInProgress(newChild, newChild.pendingProps);
+		newChild = newChild.sibling;
+		newChild.return = wip;
+	}
+}
+
 export const reconcileChildFibers = ChildReconciler(true);
 export const mountChildFibers = ChildReconciler(false);

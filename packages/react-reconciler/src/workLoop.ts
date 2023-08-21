@@ -68,7 +68,7 @@ let workInProgressSuspendedReason: SuspendedReason = NotSuspended;
 let workInProgressThrownValue: any = null;
 
 export function scheduleUpdateOnFiber(fiber: FiberNode, lane: Lane) {
-	const root = markUpdateFromFiberToRoot(fiber);
+	const root = markUpdateLaneFromFiberToRoot(fiber, lane);
 	markRootUpdated(root, lane);
 	ensureRootIsScheduled(root);
 }
@@ -221,6 +221,7 @@ function performSyncWorkOnRoot(root: FiberRootNode, lane: Lane) {
 	}
 }
 
+let count = 0;
 function renderRoot(root: FiberRootNode, lane: Lane, shouldTimeSlice: boolean) {
 	if (__DEV__) {
 		console.warn(`开始${shouldTimeSlice ? '并发' : '同步'}更新`, root);
@@ -248,6 +249,11 @@ function renderRoot(root: FiberRootNode, lane: Lane, shouldTimeSlice: boolean) {
 		} catch (error) {
 			if (__DEV__) {
 				console.warn('workLoop error', error);
+			}
+			count++;
+			if (count > 20) {
+				console.log('break');
+				break;
 			}
 			handleThrow(root, error);
 		}
@@ -353,11 +359,16 @@ function flushPassiveEffects(pendingPassiveEffects: PendingPassiveEffects) {
 	return didFlushPassiveEffect;
 }
 
-export function markUpdateFromFiberToRoot(fiber: FiberNode) {
+export function markUpdateLaneFromFiberToRoot(fiber: FiberNode, lane: Lane) {
 	let node = fiber;
 	let parent = node.return;
 
 	while (parent !== null) {
+		parent.childLanes = mergeLanes(parent.childLanes, lane);
+		const alternate = parent.alternate;
+		if (alternate !== null) {
+			alternate.childLanes = mergeLanes(alternate.childLanes, lane);
+		}
 		node = parent;
 		parent = node.return;
 	}
